@@ -23,7 +23,7 @@ jobs:
       - name: Validate JSON manifests
         run: |
           set -euo pipefail
-          for f in .claude-plugin/marketplace.json plugins/*/.claude-plugin/plugin.json; do
+          for f in .claude-plugin/marketplace.json anvil/.claude-plugin/plugin.json; do
             [ -f "$f" ] || continue
             echo "validate: $f"
             python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$f"

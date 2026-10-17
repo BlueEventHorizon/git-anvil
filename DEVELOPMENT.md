@@ -11,7 +11,7 @@
 ### 1.1 `--plugin-dir` でロードする
 
 ```bash
-claude --plugin-dir ./plugins/anvil
+claude --plugin-dir ./anvil
 ```
 
 セッション起動後、すべての anvil スキルが `/` コマンドとして使用可能になる。`--plugin-dir` にはプラグインルート（`.claude-plugin/plugin.json` を持つディレクトリ）を渡す。マーケットプレイスのルート（リポジトリルート）を渡しても何もロードされない。
@@ -31,8 +31,8 @@ claude --plugin-dir ./plugins/anvil
 ### 1.3 manifest の検証
 
 ```bash
-claude plugin validate . --strict                  # マーケットプレイス
-claude plugin validate ./plugins/anvil --strict    # プラグイン
+claude plugin validate . --strict          # マーケットプレイス
+claude plugin validate ./anvil --strict    # プラグイン
 ```
 
 ---
@@ -50,7 +50,7 @@ claude plugin validate ./plugins/anvil --strict    # プラグイン
 セッションを再起動する（`--plugin-dir` オプション付きで再実行）。編集内容はセッション内では即時反映されない。
 
 ```bash
-claude --plugin-dir ./plugins/anvil
+claude --plugin-dir ./anvil
 ```
 
 ---
@@ -61,10 +61,10 @@ SKILL.md から呼び出されるスクリプトは、Claude セッションを�
 
 ```bash
 # ステージ状態の検査（commit）
-python3 plugins/anvil/skills/commit/scripts/inspect_stage_state.py
+python3 anvil/skills/commit/scripts/inspect_stage_state.py
 
 # PR の CI 状態の検査（create-pr）
-python3 plugins/anvil/skills/create-pr/scripts/inspect_ci_status.py --pr <PR番号> --repo <owner>/<repo>
+python3 anvil/skills/create-pr/scripts/inspect_ci_status.py --pr <PR番号> --repo <owner>/<repo>
 ```
 
 `python3` が見つからない環境では `/opt/homebrew/bin/python3` を使う。
@@ -97,9 +97,9 @@ dprint check    # 差分チェックのみ（CI 向け）
 
 ### 6.1 スキルが認識されない
 
-- `--plugin-dir` のパスが正しいか確認（`./plugins/anvil` のようにプラグインルートを指定）
-- `plugins/anvil/.claude-plugin/plugin.json` が壊れていないか確認（`claude plugin validate ./plugins/anvil --strict`）
-- `plugins/anvil/skills/{skill}/SKILL.md` の frontmatter `name` がディレクトリ名と一致し、`user-invocable: true` であるか確認
+- `--plugin-dir` のパスが正しいか確認（`./anvil` のようにプラグインルートを指定）
+- `anvil/.claude-plugin/plugin.json` が壊れていないか確認（`claude plugin validate ./anvil --strict`）
+- `anvil/skills/{skill}/SKILL.md` の frontmatter `name` がディレクトリ名と一致し、`user-invocable: true` であるか確認
 
 ### 6.2 スクリプトが期待した動作をしない
 

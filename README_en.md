@@ -60,7 +60,7 @@ To disable the plugin in a specific project, run `/plugin disable anvil@git-anvi
 
 ```bash
 git clone https://github.com/BlueEventHorizon/git-anvil.git
-claude --plugin-dir ./git-anvil/plugins/anvil
+claude --plugin-dir ./git-anvil/anvil
 ```
 
 > **Note**: `--plugin-dir` is session-only. You must specify it every time you start Claude Code.

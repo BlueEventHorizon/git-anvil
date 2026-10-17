@@ -62,7 +62,7 @@ claude plugin install anvil@git-anvil --scope local    # このリポで自分�
 
 ```bash
 git clone https://github.com/BlueEventHorizon/git-anvil.git
-claude --plugin-dir ./git-anvil/plugins/anvil
+claude --plugin-dir ./git-anvil/anvil
 ```
 
 > **注意**: `--plugin-dir` はセッション限定。Claude Code を起動するたびに指定が必要。

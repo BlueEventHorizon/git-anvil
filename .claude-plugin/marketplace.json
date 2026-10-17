@@ -15,7 +15,7 @@
       "author": {
         "name": "moons"
       },
-      "source": "./plugins/anvil",
+      "source": "./anvil",
       "homepage": "https://github.com/BlueEventHorizon/git-anvil"
     }
   ]

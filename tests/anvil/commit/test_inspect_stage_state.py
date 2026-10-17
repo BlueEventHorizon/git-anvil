@@ -18,7 +18,7 @@ from pathlib import Path
 
 _SCRIPT_PATH = (
     Path(__file__).resolve().parents[3]
-    / "plugins" / "anvil" / "skills" / "commit" / "scripts" / "inspect_stage_state.py"
+    / "anvil" / "skills" / "commit" / "scripts" / "inspect_stage_state.py"
 )
 
 _spec = importlib.util.spec_from_file_location("anvil_inspect_stage_state", _SCRIPT_PATH)

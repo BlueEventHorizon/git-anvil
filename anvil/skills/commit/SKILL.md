@@ -33,7 +33,7 @@ commit 前に format 乱れを必ず解消する。format ずれたまま commit
 bash "${CLAUDE_SKILL_DIR}/scripts/run_dprint_fmt.sh"
 ```
 
-`dprint fmt` が新たにファイルを書き換えた場合、それも本 commit に含める (関連: ユーザー方針「dprint fmt がスコープ外ファイルを整形しても revert 不要」)。
+`dprint fmt` が新たにファイルを書き換えた場合、今回の変更と無関係なファイルであっても revert せず、本 commit に含める。
 
 `dprint` 以外の formatter (prettier / black / rustfmt 等) が project で使われている場合は、CLAUDE.md か README.md の指示に従って手動適用したうえで本 commit に含める。
 
@@ -111,7 +111,7 @@ git status
 **ステージの確認より前に実行する。**
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/skills/commit/scripts/inspect_stage_state.py"
+python3 "${CLAUDE_SKILL_DIR}/scripts/inspect_stage_state.py"
 ```
 
 出力 JSON の `tracked_paths` / `staged_paths` / `unstaged_paths` / `untracked_paths` / `stale_staged_paths` を使う。
@@ -155,7 +155,7 @@ git branch --show-current
 
 保護ブランチの解決優先順位（`create-pr` skill と同一の優先順位に揃える）:
 
-1. `.git_information.yaml` の `default_base_branch`
+1. `.git_information.yaml` の `github.default_base_branch`
 2. 上記が無い場合 `develop` → `main` → `master` の順で、リポジトリに存在するものを採用
 
 ### 3.5.2 現在のブランチが保護ブランチと一致する場合
@@ -212,9 +212,9 @@ push 失敗の場合は AskUserQuestion を使用してエラー内容を提示�
 
 ## エラーハンドリング
 
-| エラー        | 対応                                           |
-| ------------- | ---------------------------------------------- |
-| 変更なし      | エラー終了・変更を促す                         |
-| detached HEAD | `git symbolic-ref` 失敗 → ブランチ名なしで続行 |
-| コミット失敗  | AskUserQuestion でエラー内容を提示し対応を確認 |
-| push 失敗     | AskUserQuestion でエラー内容を提示し対応を確認 |
+| エラー        | 対応                                                          |
+| ------------- | ------------------------------------------------------------- |
+| 変更なし      | エラー終了・変更を促す                                        |
+| detached HEAD | `git branch --show-current` の出力が空 → ブランチ名なしで続行 |
+| コミット失敗  | AskUserQuestion でエラー内容を提示し対応を確認                |
+| push 失敗     | AskUserQuestion でエラー内容を提示し対応を確認                |

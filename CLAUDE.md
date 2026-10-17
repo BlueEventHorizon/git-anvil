@@ -33,13 +33,13 @@ forge は本リポジトリの外にある外部プラグインであり、本�
 
 ### 3 層構造
 
-| 層          | ファイル                                      | 本リポジトリでの実体                           |
-| ----------- | --------------------------------------------- | ---------------------------------------------- |
-| marketplace | `.claude-plugin/marketplace.json`             | リポジトリルート。配布する plugin の catalog   |
-| plugin      | `plugins/<plugin>/.claude-plugin/plugin.json` | `anvil`。slash command の namespace になる     |
-| skill       | `plugins/<plugin>/skills/<skill>/SKILL.md`    | 各スキル本体。`/<plugin>:<skill>` で起動される |
+| 層          | ファイル                              | 本リポジトリでの実体                           |
+| ----------- | ------------------------------------- | ---------------------------------------------- |
+| marketplace | `.claude-plugin/marketplace.json`     | リポジトリルート。配布する plugin の catalog   |
+| plugin      | `<plugin>/.claude-plugin/plugin.json` | `anvil`。slash command の namespace になる     |
+| skill       | `<plugin>/skills/<skill>/SKILL.md`    | 各スキル本体。`/<plugin>:<skill>` で起動される |
 
-プラグインが 1 つでも `plugins/anvil/` に分けて置く。リポジトリルートには docs・tests・CI 等の非プラグインファイルがあり、`source: "./"` にするとそれらがプラグインキャッシュへ丸ごとコピーされるためである。
+プラグインはリポジトリルートではなく `anvil/` に分けて置く（marketplace の `source` は `./anvil`）。リポジトリルートには docs・tests・CI 等の非プラグインファイルがあり、`source: "./"` にするとそれらがプラグインキャッシュへ丸ごとコピーされるためである。
 
 ### プレースホルダ [MANDATORY]
 
@@ -68,7 +68,7 @@ forge は本リポジトリの外にある外部プラグインであり、本�
 
 ## 用語と境界
 
-- **配布物** = `plugins/` 配下。利用者環境へ配られるもの
+- **配布物** = `anvil/` 配下。利用者環境へ配られるもの
 - **プロジェクト文書** = リポジトリルートの `docs/` 配下。本プロジェクト自身のための文書で、配布しない
 
 ## 重要規約
@@ -77,7 +77,7 @@ forge は本リポジトリの外にある外部プラグインであり、本�
 
 - **配布物に、配布物に含まれない具体パスと本リポジトリ固有の事情を書かない**: 固有の事情とは、内部文書の ID・仕様名、worktree 配置、原本 SoT である立場等。**配布物の公開名（`git-anvil` / `anvil`）は固有の事情ではない**（利用者が install 時に指定し、現に目にする名前）
 - **配布物のうち利用者環境で読まれるもの（SKILL.md / agents / commands / 内蔵 docs）からプロジェクト文書を参照しない**: パスも spec ID も禁止。規範は配布物側に本文で持たせる。script のコメント・docstring は対象外
-- **下流での回避で済ませず、本リポジトリの原本（`plugins/anvil/`）を直す**: `~/.claude/plugins/cache/` を書き換えても次の install で消える。memory に回避策を残すのは修正ではない
+- **下流での回避で済ませず、本リポジトリの原本（`anvil/`）を直す**: `~/.claude/plugins/cache/` を書き換えても次の install で消える。memory に回避策を残すのは修正ではない
 - **agent / SKILL のプロンプト指示は、出力を組み立てる 1 箇所にだけ置く**: 近接箇所への同一指示は重複
 
 ### プロジェクト文書
@@ -120,12 +120,12 @@ forge は本リポジトリの外にある外部プラグインであり、本�
 
 ビルド・パッケージ管理のシステムは無い。**外部依存の可否は、配布物かどうかではなく、プラグインのランタイムとして実行されるコードかどうかで区切る**。リポジトリ全体は git 経由で配布されうるが、利用者がそれを開発環境として使わない限り、ランタイムが import しないライブラリはインストールされない。
 
-- **`plugins/` 配下**（ランタイム。SKILL.md がスキル実行時に呼び、利用者環境で動く）: 標準ライブラリのみ使用する（外部依存禁止。例外として PyYAML のみ許容し、他の外部ライブラリへは拡張しない）
+- **`anvil/` 配下**（ランタイム。SKILL.md がスキル実行時に呼び、利用者環境で動く）: 標準ライブラリのみ使用する（外部依存禁止。例外として PyYAML のみ許容し、他の外部ライブラリへは拡張しない）
 - **`tests/` 配下**（非ランタイム。スキル実行の経路から呼ばれず、開発・CI でのみ動く）: 外部ライブラリの追加を許容する。追加時は CI（`.github/workflows/ci.yml`）にインストール手順を足し、依存を `requirements*.txt` 等で明示する
 
 - **Python 3.14 以上をサポート対象とする**。Python 3.13 以下は対象外
 - **CI（`.github/workflows/ci.yml`）のゲートは 2 つ**: `python3 -m unittest discover -s tests -p 'test_*.py'` と `dprint check`。JSON / TOML / Markdown / YAML を編集したら [dprint](https://dprint.dev/) で `dprint fmt` を通す（設定は `dprint.jsonc`）。通さないと CI が落ちる
-- ローカル読み込み: `claude --plugin-dir ./plugins/anvil`。詳細は [DEVELOPMENT.md](DEVELOPMENT.md)
+- ローカル読み込み: `claude --plugin-dir ./anvil`。詳細は [DEVELOPMENT.md](DEVELOPMENT.md)
 - `AGENTS.md` は `CLAUDE.md` へのシンボリックリンク（Codex 向け）。どちらを編集しても同一実体が変わる
 
 ## Debugging
@@ -156,7 +156,7 @@ git -C <実体パス> show main:<契約を定める SKILL.md やスクリプト>
 
 ## Testing [CRITICAL]
 
-`plugins/` 配下の Python スクリプトにはテストが必須。SKILL.md はテスト困難なため例外。
+`anvil/` 配下の Python スクリプトにはテストが必須。SKILL.md はテスト困難なため例外。
 `.claude/` 配下のローカルスキル・スクリプトはテスト対象外。
 
 テストは `tests/` にプラグイン名・スキル名で分類して配置する。

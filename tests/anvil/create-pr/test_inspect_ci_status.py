@@ -22,7 +22,7 @@ from pathlib import Path
 
 _SCRIPT_PATH = (
     Path(__file__).resolve().parents[3]
-    / "plugins" / "anvil" / "skills" / "create-pr" / "scripts" / "inspect_ci_status.py"
+    / "anvil" / "skills" / "create-pr" / "scripts" / "inspect_ci_status.py"
 )
 
 _spec = importlib.util.spec_from_file_location("anvil_inspect_ci_status", _SCRIPT_PATH)

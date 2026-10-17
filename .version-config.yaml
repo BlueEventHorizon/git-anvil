@@ -14,10 +14,10 @@ targets:
         optional: true
 
   - name: anvil
-    version_file: plugins/anvil/.claude-plugin/plugin.json
+    version_file: anvil/.claude-plugin/plugin.json
     version_path: version
     scope:
-      - plugins/anvil/**
+      - anvil/**
     sync_files:
       - path: .claude-plugin/marketplace.json
         pattern: '"version": "{version}"'

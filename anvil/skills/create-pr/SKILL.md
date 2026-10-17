@@ -53,7 +53,7 @@ gh auth status
 
 `.git_information.yaml` がプロジェクトルートに存在するか確認する。
 
-- **存在する** → 読み込んで `owner` / `repo` / `default_base_branch` / `pr_template` を取得
+- **存在する** → 読み込んで `github.owner` / `github.repo` / `github.default_base_branch` / `github.pr_template` を取得
 - **存在しない** → git コマンドで自動検出:
   ```bash
   git remote get-url origin
@@ -83,7 +83,7 @@ git branch --show-current
 
 ### 1.5 ベースブランチの決定
 
-優先順位: 引数 > `.git_information.yaml` の `default_base_branch` > develop > main > master
+優先順位: 引数 > `.git_information.yaml` の `github.default_base_branch` > develop > main > master
 
 ```bash
 git branch -a | grep -E "(develop|main|master)"
@@ -138,7 +138,7 @@ git diff <base>...HEAD --stat        # 変更ファイル統計（概要に使�
 
 PR テンプレートの適用:
 
-1. `.git_information.yaml` の `pr_template` パスを確認
+1. `.git_information.yaml` の `github.pr_template` パスを確認
 2. なければ `.github/PULL_REQUEST_TEMPLATE.md` を確認
 3. どちらも存在しない場合は下記デフォルト構造を使用:
 

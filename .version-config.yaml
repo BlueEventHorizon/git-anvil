@@ -1,0 +1,46 @@
+# version_config_version: 1.0
+
+targets:
+  - name: marketplace
+    version_file: .claude-plugin/marketplace.json
+    version_path: metadata.version
+    sync_files:
+      - path: README.md
+        pattern: "**マーケットプレイスバージョン: {version}**"
+        filter: "**マーケットプレイスバージョン:"
+      - path: README_en.md
+        pattern: "**Marketplace version: {version}**"
+        filter: "**Marketplace version:"
+        optional: true
+
+  - name: anvil
+    version_file: anvil/.claude-plugin/plugin.json
+    version_path: version
+    scope:
+      - anvil/**
+    sync_files:
+      - path: .claude-plugin/marketplace.json
+        pattern: '"version": "{version}"'
+        filter: '"name": "anvil"'
+      - path: README.md
+        pattern: "| **anvil** | {version} |"
+        filter: "| **anvil**"
+      - path: README_en.md
+        pattern: "| **anvil** | {version} |"
+        filter: "| **anvil**"
+        optional: true
+      - path: CLAUDE.md
+        pattern: "**anvil** (v{version})"
+        filter: "**anvil** (v"
+
+changelog:
+  file: CHANGELOG.md
+  format: keep-a-changelog
+  git_log_auto: false
+  section_per_target: true
+
+git:
+  tag_format: "{target}-v{version}"
+  commit_message: "chore: bump {target} to {version}"
+  auto_tag: false
+  auto_commit: false

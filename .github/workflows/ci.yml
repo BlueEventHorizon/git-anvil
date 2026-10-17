@@ -4,46 +4,36 @@ on:
   push:
     branches: [main, develop]
   pull_request:
+    branches: [main, develop]
 
 jobs:
   test:
-    name: installer test + lint
+    name: unittest + dprint check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install rsync (required by installer)
-        run: sudo apt-get update && sudo apt-get install -y rsync
-
-      - name: Verify python3 + bash
-        run: |
-          python3 --version
-          bash --version | head -1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
 
       - name: Validate JSON manifests
         run: |
           set -euo pipefail
-          for f in .claude-plugin/marketplace.json plugins/*/.claude-plugin/plugin.json; do
+          for f in .claude-plugin/marketplace.json anvil/.claude-plugin/plugin.json; do
             [ -f "$f" ] || continue
             echo "validate: $f"
             python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$f"
           done
 
-      - name: Validate that templates and committed scripts are in sync
-        run: |
-          diff -u plugins/meta/skills/plugin-installer-creator/templates/install_copy.sh \
-                  scripts/plugin-installer/install_copy.sh
-          diff -u plugins/meta/skills/plugin-installer-creator/templates/install_copy_codex.sh \
-                  scripts/plugin-installer/install_copy_codex.sh
+      - name: Run unit tests
+        run: python3 -m unittest discover -s tests -p 'test_*.py'
 
-      - name: shellcheck
-        run: |
-          sudo apt-get install -y shellcheck
-          shellcheck --severity=error \
-            plugins/meta/skills/plugin-installer-creator/templates/install_copy.sh \
-            plugins/meta/skills/plugin-installer-creator/templates/install_copy_codex.sh \
-            scripts/plugin-installer/install_copy.sh \
-            scripts/plugin-installer/install_copy_codex.sh
+      - name: Install dprint
+        run: curl -fsSL https://dprint.dev/install.sh | sh -s 0.55.1
 
-      - name: make test
-        run: make test
+      - name: Run dprint check
+        run: $HOME/.dprint/bin/dprint check

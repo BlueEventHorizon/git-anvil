@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 """commit 前のステージ状態を検査する read-only CLI。
 
-`/anvil:commit` の Phase 3 が、何をステージするかを利用者へ確認するために使う。
+`/anvil:commit` の Phase 2 が、何をステージするかを利用者へ確認するために使う。
+`commit_ops.py` が `inspect()` を import して使う（`prepare` / `stage` の出力に含める）。単独の CLI としても動く。
 
 ## なぜ script にするか
 
@@ -28,14 +29,13 @@ quote 表記（空白・非 ASCII を含むパス）や rename の `->` 表記�
 }
 ```
 
-ブランチ名は返さない。保護ブランチの判定は Phase 3.5 が独立に行うため、ここで返すと使われない値に
-なる。
+ブランチ名は返さない。ブランチの判定は `commit_ops.py` が行う。
 
 `tracked_paths` は**追跡済みの変更**（ステージ済み・未ステージの両方）である。未追跡は
 `untracked_paths` へ分け、`git add -u` の対象外であることを呼び出し側が区別できるようにする。
 
 `staged_paths` / `unstaged_paths` は `tracked_paths` を **X 列（index）と Y 列（作業ツリー）で
-分けたもの**である。両方が非空なら「ステージ済みと未ステージが混在する」——Phase 3 がこの状態を
+分けたもの**である。両方が非空なら「ステージ済みと未ステージが混在する」——Phase 2 がこの状態を
 分岐条件に持つため、判定できる形で返す。合算した `tracked_paths` だけを返していた頃、この分岐だけが
 `git status` の手読みに依存しており、script 化した理由（quote 表記・rename の取り違えを避ける）が
 達成されていなかった。同じパスが両方に載ることはある（`MM` 等。それが `stale_staged_paths` である）。

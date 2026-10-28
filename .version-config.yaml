@@ -6,11 +6,11 @@ targets:
     version_path: metadata.version
     sync_files:
       - path: README.md
-        pattern: "**マーケットプレイスバージョン: {version}**"
-        filter: "**マーケットプレイスバージョン:"
-      - path: README_en.md
         pattern: "**Marketplace version: {version}**"
         filter: "**Marketplace version:"
+      - path: README.ja.md
+        pattern: "**マーケットプレイスバージョン: {version}**"
+        filter: "**マーケットプレイスバージョン:"
         optional: true
 
   - name: anvil
@@ -25,7 +25,7 @@ targets:
       - path: README.md
         pattern: "| **anvil** | {version} |"
         filter: "| **anvil**"
-      - path: README_en.md
+      - path: README.ja.md
         pattern: "| **anvil** | {version} |"
         filter: "| **anvil**"
         optional: true

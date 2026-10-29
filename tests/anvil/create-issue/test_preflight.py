@@ -66,7 +66,7 @@ class PreflightTest(unittest.TestCase):
 
     def test_success_targets_origin_and_creates_body_dir(self):
         result = self._preflight(FakeRunner())
-        self.assertEqual(result["target"], "octo/app")
+        self.assertEqual(result["target"], "github.com/octo/app")
         self.assertEqual(result["source"], "origin")
         self.assertFalse(result["is_external"])
         self.assertEqual(result["missing_labels"], [])
@@ -77,9 +77,9 @@ class PreflightTest(unittest.TestCase):
     def test_repo_argument_is_external_and_queried(self):
         runner = FakeRunner()
         result = self._preflight(runner, "octo/other")
-        self.assertEqual(result["target"], "octo/other")
+        self.assertEqual(result["target"], "github.com/octo/other")
         self.assertTrue(result["is_external"])
-        self.assertIn(["gh", "repo", "view", "octo/other", "--json", "nameWithOwner,hasIssuesEnabled"], runner.calls)
+        self.assertIn(["gh", "repo", "view", "github.com/octo/other", "--json", "nameWithOwner,hasIssuesEnabled"], runner.calls)
 
     def test_missing_labels_are_listed_in_fixed_order(self):
         runner = FakeRunner({("gh", "label"): _proc(stdout=json.dumps([{"name": "question"}]))})

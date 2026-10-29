@@ -21,9 +21,9 @@
 
 ```json
 {
-  "target": "octo/app",
+  "target": "github.com/octo/app",
   "source": "argument",
-  "origin_repo": "octo/main",
+  "origin_repo": "github.com/octo/main",
   "is_external": true,
   "missing_labels": ["enhancement"],
   "body_file": "/path/to/project/.temp/anvil/create-issue/issue_body_<session>.md"

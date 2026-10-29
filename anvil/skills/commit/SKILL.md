@@ -5,7 +5,7 @@ description: |
   トリガー: "コミットして", "commit して", "push して", "commit & push"
 user-invocable: true
 argument-hint: "[message]"
-allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/*), Bash(bash ${CLAUDE_SKILL_DIR}/scripts/*), Write, AskUserQuestion
+allowed-tools: Bash(python3 "${CLAUDE_SKILL_DIR}/scripts/*), Bash(bash "${CLAUDE_SKILL_DIR}/scripts/*), Write, AskUserQuestion
 ---
 
 # /anvil:commit
@@ -31,7 +31,7 @@ commit 前に format 乱れを必ず解消する。format ずれたまま commit
 共有スクリプトで実行する（存在チェック + 実行、条件判定ロジックのインライン重複を避けるため）:
 
 ```bash
-bash ${CLAUDE_SKILL_DIR}/scripts/run_dprint_fmt.sh
+bash "${CLAUDE_SKILL_DIR}/scripts/run_dprint_fmt.sh"
 ```
 
 `dprint fmt` が新たにファイルを書き換えた場合、今回の変更と無関係なファイルであっても revert せず、本 commit に含める。
@@ -43,7 +43,7 @@ bash ${CLAUDE_SKILL_DIR}/scripts/run_dprint_fmt.sh
 ## Phase 1: 変更の状態を調べる
 
 ```bash
-python3 ${CLAUDE_SKILL_DIR}/scripts/commit_ops.py prepare --message-file "${CLAUDE_PROJECT_DIR}/.temp/anvil/commit/commit_msg_${CLAUDE_SESSION_ID}.txt"
+python3 "${CLAUDE_SKILL_DIR}/scripts/commit_ops.py" prepare --message-file "${CLAUDE_PROJECT_DIR}/.temp/anvil/commit/commit_msg_${CLAUDE_SESSION_ID}.txt"
 ```
 
 script は、変更の状態・ステージ済みの差分・現在ブランチと保護ブランチを返し、コミットメッセージの置き場を作る。`git status` 等を自分で実行して同じ判定をしない。
@@ -97,7 +97,7 @@ Error: コミットする変更がありません。
 
 `AskUserQuestion` で次を提示する。
 
-- **追跡済みファイルを全てステージする**（既定）→ `python3 ${CLAUDE_SKILL_DIR}/scripts/commit_ops.py stage --tracked` を実行し、Phase 3 へ進む
+- **追跡済みファイルを全てステージする**（既定）→ `python3 "${CLAUDE_SKILL_DIR}/scripts/commit_ops.py" stage --tracked` を実行し、Phase 3 へ進む
 - **現在ステージされている内容のまま進む** → `git add` せず Phase 3 へ進む。**下記の条件では提示しない**
 - **ステージせずに終了する** → 終了
 
@@ -112,7 +112,7 @@ Error: コミットする変更がありません。
 
 `stale_staged_paths` が空でない場合は、1 番目の選択肢の説明に「ステージし直して最新の内容にする」ことを明記する（`git add -u` は現在の内容で index を更新するため、これで解消する）。
 
-未追跡ファイル（`untracked_paths`）がある場合は AskUserQuestion を使用して個別にステージするか確認する（`git add -u` の対象外であるため上記の選択とは別に問う）。ステージするものは `python3 ${CLAUDE_SKILL_DIR}/scripts/commit_ops.py stage --path <パス>`（複数なら `--path` を繰り返す。追跡済みも同時にステージするなら `--tracked` を併せて付ける）で 1 回にまとめて実行する。
+未追跡ファイル（`untracked_paths`）がある場合は AskUserQuestion を使用して個別にステージするか確認する（`git add -u` の対象外であるため上記の選択とは別に問う）。ステージするものは `python3 "${CLAUDE_SKILL_DIR}/scripts/commit_ops.py" stage --path <パス>`（複数なら `--path` を繰り返す。追跡済みも同時にステージするなら `--tracked` を併せて付ける）で 1 回にまとめて実行する。
 
 `stage` の終了コードが 0 なら、出力 JSON で**現在の状態**を置き換える。それ以外なら `errors` を提示してエラー終了する。
 
@@ -158,7 +158,7 @@ Phase 2 でステージ対象が確定した後に生成する。commit され�
 提案する feature ブランチ名: feature/<Phase 3 で生成したコミットメッセージから推定したスラッグ>
 ```
 
-- **feature ブランチを作成して続行**（デフォルト）→ 提案したブランチ名を `AskUserQuestion` で承認・修正させた上で `python3 ${CLAUDE_SKILL_DIR}/scripts/commit_ops.py new-branch --name <branch>` を実行し、Phase 4 へ進む（失敗したら `errors` を提示して確認する）
+- **feature ブランチを作成して続行**（デフォルト）→ 提案したブランチ名を `AskUserQuestion` で承認・修正させた上で `python3 "${CLAUDE_SKILL_DIR}/scripts/commit_ops.py" new-branch --name <branch>` を実行し、Phase 4 へ進む（失敗したら `errors` を提示して確認する）
 - **このまま保護ブランチに commit する（非推奨）** → 警告を出したまま Phase 4 へ進む
 - **キャンセル** → 終了（commit しない）
 
@@ -182,7 +182,7 @@ Phase 2 でステージ対象が確定した後に生成する。commit され�
 
 - **コミットする** → 次を実行する:
   1. `Write` ツールで、コミットメッセージをそのまま `<message-file>` に書く（シェルで書き出さない）
-  2. `python3 ${CLAUDE_SKILL_DIR}/scripts/commit_ops.py commit --message-file "<message-file>"` を実行する。終了コード 0 なら script が `<message-file>` を削除している
+  2. `python3 "${CLAUDE_SKILL_DIR}/scripts/commit_ops.py" commit --message-file "<message-file>"` を実行する。終了コード 0 なら script が `<message-file>` を削除している
 - **キャンセル** → 終了（push は行わない）
 
 コミット失敗（pre-commit hook によるエラー等。終了コード 0 以外）の場合は、AskUserQuestion を使用して `errors` を提示し対応を確認する。`<message-file>` は残っているので、再試行ではそのまま使う。
@@ -194,7 +194,7 @@ Phase 2 でステージ対象が確定した後に生成する。commit され�
 コミット成功後、AskUserQuestion を使用してプッシュの承認を得る:
 
 - **push しない（デフォルト）** → push せずに終了
-- **push する** → `python3 ${CLAUDE_SKILL_DIR}/scripts/commit_ops.py push --branch <current-branch>` を実行する（script が追跡設定の有無で `git push` と `git push -u origin` を使い分ける）
+- **push する** → `python3 "${CLAUDE_SKILL_DIR}/scripts/commit_ops.py" push --branch <current-branch>` を実行する（script が追跡設定の有無で `git push` と `git push -u origin` を使い分ける）
 
 push 失敗（終了コード 0 以外）の場合は AskUserQuestion を使用して `errors` を提示し対応を確認する。
 

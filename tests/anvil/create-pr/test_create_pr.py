@@ -32,7 +32,7 @@ class ParseUrlTest(unittest.TestCase):
     def test_github_com(self):
         self.assertEqual(
             mod.parse_pr_url("https://github.com/upstream/app/pull/7\n"),
-            {"url": "https://github.com/upstream/app/pull/7", "number": 7, "repo": "upstream/app"},
+            {"url": "https://github.com/upstream/app/pull/7", "number": 7, "repo": "github.com/upstream/app"},
         )
 
     def test_enterprise_host_is_kept(self):
@@ -53,7 +53,7 @@ class CreateTest(unittest.TestCase):
         runner = mock.Mock(return_value=_proc(stdout="https://github.com/upstream/app/pull/7\n"))
         with mock.patch.object(mod, "_run", runner):
             result = mod.create("main", "[Feature] X", str(self.body))
-        self.assertEqual(result["repo"], "upstream/app")
+        self.assertEqual(result["repo"], "github.com/upstream/app")
         self.assertEqual(result["number"], 7)
         self.assertFalse(self.body.exists())
         self.assertEqual(

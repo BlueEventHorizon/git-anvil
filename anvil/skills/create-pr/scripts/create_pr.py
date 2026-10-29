@@ -22,8 +22,9 @@ PR が作られたリポジトリは、`gh pr create` が出力する PR の URL
 
 ## 出力
 
-成功時（終了コード 0）は標準出力に `{"url": "...", "number": N, "repo": "OWNER/REPO"}`。
-`repo` はホストが `github.com` 以外なら `HOST/OWNER/REPO` とする（`gh --repo` にそのまま渡せる形）。
+成功時（終了コード 0）は標準出力に `{"url": "...", "number": N, "repo": "HOST/OWNER/REPO"}`。
+`repo` は `gh --repo` にそのまま渡せる形で、ホストは `github.com` でも省かない（`gh` はホストの無い
+`OWNER/REPO` を既定ホスト（`GH_HOST` 等）で解釈し、PR とは別のホストへ問い合わせうるため）。
 失敗時（終了コード 1）は標準出力に `{"errors": [...]}`。
 
 ## 終了コード
@@ -63,9 +64,8 @@ def parse_pr_url(text: str) -> dict | None:
     m = _PR_URL.search(text)
     if not m:
         return None
-    host, owner, repo = m.group("host"), m.group("owner"), m.group("repo")
-    full = f"{owner}/{repo}" if host.lower() == "github.com" else f"{host}/{owner}/{repo}"
-    return {"url": m.group(0), "number": int(m.group("number")), "repo": full}
+    repo = f"{m.group('host')}/{m.group('owner')}/{m.group('repo')}"
+    return {"url": m.group(0), "number": int(m.group("number")), "repo": repo}
 
 
 def create(base: str, title: str, body_file: str) -> dict:

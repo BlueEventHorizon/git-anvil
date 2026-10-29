@@ -25,15 +25,17 @@ AI に読ませると末尾の `.git` やホストの扱いで取り違える。
 
 ```json
 {
-  "target": "octo/app",
+  "target": "github.com/octo/app",
   "source": "argument",
-  "origin_repo": "octo/main",
+  "origin_repo": "github.com/octo/main",
   "is_external": true
 }
 ```
 
-`target` / `origin_repo` は `gh --repo` にそのまま渡せる `[HOST/]OWNER/REPO` 形式である。
-ホストが `github.com` のときだけ省く（`gh` の既定ホストと一致するため）。
+`target` / `origin_repo` は `gh --repo` にそのまま渡せる `HOST/OWNER/REPO` 形式である。
+ホストは `github.com` でも省かない。`gh` はホストの無い `OWNER/REPO` を既定ホスト（`GH_HOST` 等）で
+解釈するため、省くと、ここで解決したホストとは別のホストのリポジトリが対象になりうる。
+`--repo` にホストが無いときは `github.com` とする。
 
 `is_external` は起票先が `origin` と異なるか。ホスト・owner・repo を大文字小文字を区別せずに
 比較する（GitHub の名前は大文字小文字を区別しない）。
@@ -106,8 +108,6 @@ def parse_remote_url(url: str) -> tuple[str, str, str]:
 
 
 def _format(host: str, owner: str, repo: str) -> str:
-    if host.lower() == _DEFAULT_HOST:
-        return f"{owner}/{repo}"
     return f"{host}/{owner}/{repo}"
 
 

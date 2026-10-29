@@ -86,7 +86,12 @@ class ResolveTest(unittest.TestCase):
     def test_without_argument_targets_origin(self):
         self.assertEqual(
             mod.resolve(self.ORIGIN, None),
-            {"target": "octo/app", "source": "origin", "origin_repo": "octo/app", "is_external": False},
+            {
+                "target": "github.com/octo/app",
+                "source": "origin",
+                "origin_repo": "github.com/octo/app",
+                "is_external": False,
+            },
         )
 
     def test_argument_matching_origin_is_not_external(self):
@@ -97,15 +102,21 @@ class ResolveTest(unittest.TestCase):
     def test_argument_with_explicit_default_host_is_not_external(self):
         self.assertFalse(mod.resolve(self.ORIGIN, "github.com/octo/app")["is_external"])
 
+    def test_github_com_host_is_kept(self):
+        """ホストを省くと gh が GH_HOST 等の既定ホストで解釈するため、github.com でも残す。"""
+        result = mod.resolve(self.ORIGIN, "github.com/octo/other")
+        self.assertEqual(result["target"], "github.com/octo/other")
+        self.assertEqual(result["origin_repo"], "github.com/octo/app")
+
     def test_different_repo_is_external(self):
         result = mod.resolve(self.ORIGIN, "octo/other")
-        self.assertEqual(result["target"], "octo/other")
+        self.assertEqual(result["target"], "github.com/octo/other")
         self.assertTrue(result["is_external"])
 
     def test_different_host_is_external(self):
         """GHE の origin に対し OWNER/REPO だけを渡すと github.com が対象になる。別物として扱う。"""
         result = mod.resolve("git@ghe.example.com:octo/app.git", "octo/app")
-        self.assertEqual(result["target"], "octo/app")
+        self.assertEqual(result["target"], "github.com/octo/app")
         self.assertEqual(result["origin_repo"], "ghe.example.com/octo/app")
         self.assertTrue(result["is_external"])
 
@@ -129,7 +140,12 @@ class CliTest(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, proc.stderr)
         self.assertEqual(
             json.loads(proc.stdout),
-            {"target": "octo/other", "source": "argument", "origin_repo": "octo/app", "is_external": True},
+            {
+                "target": "github.com/octo/other",
+                "source": "argument",
+                "origin_repo": "github.com/octo/app",
+                "is_external": True,
+            },
         )
 
     def test_missing_origin_fails(self):

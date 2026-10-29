@@ -5,7 +5,7 @@ description: |
   トリガー: "PR を作成", "プルリクエスト作成", "create-pr", "PR 出して"
 user-invocable: true
 argument-hint: "[base-branch]"
-allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/*), Bash(gh pr view *), Write, Read, AskUserQuestion
+allowed-tools: Bash(python3 "${CLAUDE_SKILL_DIR}/scripts/*), Bash(gh pr view *), Write, Read, AskUserQuestion
 ---
 
 # /anvil:create-pr
@@ -29,7 +29,7 @@ allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/*), Bash(gh pr view *), 
 ### 1.1 確認と収集
 
 ```bash
-python3 ${CLAUDE_SKILL_DIR}/scripts/preflight.py --body-file "${CLAUDE_PROJECT_DIR}/.temp/anvil/create-pr/pr_body_${CLAUDE_SESSION_ID}.md" [--base <引数で指定された値>]
+python3 "${CLAUDE_SKILL_DIR}/scripts/preflight.py" --body-file "${CLAUDE_PROJECT_DIR}/.temp/anvil/create-pr/pr_body_${CLAUDE_SESSION_ID}.md" [--base <引数で指定された値>]
 ```
 
 script は、gh CLI の有無と認証・git リポジトリか・現在ブランチ・ベースブランチ（引数 > develop > main > master）・`<base>` からのコミットの有無を確かめ、PR 本文の材料（コミット一覧・変更ファイル統計・PR テンプレート・CI 設定の有無）を集め、本文ファイルの置き場を作る。コマンドを自分で組み立てて同じ確認・収集をしない。
@@ -103,7 +103,7 @@ PR テンプレートの適用:
 ### 3.1 リモートへのプッシュ
 
 ```bash
-python3 ${CLAUDE_SKILL_DIR}/scripts/push_branch.py --branch <current-branch>
+python3 "${CLAUDE_SKILL_DIR}/scripts/push_branch.py" --branch <current-branch>
 ```
 
 script は、origin に同名ブランチが無ければ `git push -u origin` し、あってもローカル HEAD と異なれば push する（remote-tracking ref はローカルキャッシュのため、`git ls-remote` でリモートを直接問い合わせる）。
@@ -118,7 +118,7 @@ script は、origin に同名ブランチが無ければ `git push -u origin` �
 1. `Write` ツールで、Phase 2 で生成した本文をそのまま `<body-file>` に書く
 2. PR を作成する:
    ```bash
-   python3 ${CLAUDE_SKILL_DIR}/scripts/create_pr.py --base <base> --title "<title>" --body-file "<body-file>"
+   python3 "${CLAUDE_SKILL_DIR}/scripts/create_pr.py" --base <base> --title "<title>" --body-file "<body-file>"
    ```
    - **終了コード 0** → 出力 JSON の `url` / `number` / `repo` を記録する。`repo` は PR が実際に作られたリポジトリであり、Phase 5 の問い合わせ先に使う（fork では upstream になることがある）。script が `<body-file>` を削除している
    - **それ以外** → 出力 JSON の `errors` を表示して終了する。`<body-file>` は残っているので、再実行ではそのまま使える
@@ -168,7 +168,7 @@ Phase 1 の `has_ci` を見る。
 Phase 3.2 で作成した PR の `number` と `repo` に対し、状態を問い合わせる:
 
 ```bash
-python3 ${CLAUDE_SKILL_DIR}/scripts/inspect_ci_status.py --pr <number> --repo <repo>
+python3 "${CLAUDE_SKILL_DIR}/scripts/inspect_ci_status.py" --pr <number> --repo <repo>
 ```
 
 **`gh pr checks` を直接呼んで終了コードで分岐してはならない [MANDATORY]**。`gh` の終了コードは
@@ -200,7 +200,7 @@ script が非ゼロ終了した場合（`gh` 自体が失敗した・`gh` の出
 `sleep` との複合コマンドにしない（事前承認の形から外れ、呼ぶたびに確認が出る）。
 
 ```bash
-python3 ${CLAUDE_SKILL_DIR}/scripts/inspect_ci_status.py --pr <number> --repo <repo> --delay 30
+python3 "${CLAUDE_SKILL_DIR}/scripts/inspect_ci_status.py" --pr <number> --repo <repo> --delay 30
 ```
 
 - `status` が `pending` / `not_reported` のまま → 継続。ただし **`--delay 30` 付きで 20 回呼んでも

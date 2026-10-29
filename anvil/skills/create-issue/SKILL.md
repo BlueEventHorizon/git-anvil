@@ -6,7 +6,7 @@ description: |
   トリガー: "issue を作りたい", "問題を記録したい", "バグを issue にして", "課題を起票", "要望を issue にして"
 user-invocable: true
 argument-hint: "[--repo <owner>/<repo>] [issue-title]"
-allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/*), Bash(gh issue view *), Write, AskUserQuestion
+allowed-tools: Bash(python3 "${CLAUDE_SKILL_DIR}/scripts/*), Bash(gh issue view *), Write, AskUserQuestion
 ---
 
 # /anvil:create-issue
@@ -35,7 +35,7 @@ allowed-tools: Bash(python3 ${CLAUDE_SKILL_DIR}/scripts/*), Bash(gh issue view *
 **`--repo` は、利用者が引数に明示したときだけ渡す。** 会話の文脈（話題に出たプロジェクト名、参照された Issue の URL 等）から AI が起票先を推測して補ってはならない。
 
 ```bash
-python3 ${CLAUDE_SKILL_DIR}/scripts/preflight.py --body-file "${CLAUDE_PROJECT_DIR}/.temp/anvil/create-issue/issue_body_${CLAUDE_SESSION_ID}.md" [--repo <引数で指定された値>]
+python3 "${CLAUDE_SKILL_DIR}/scripts/preflight.py" --body-file "${CLAUDE_PROJECT_DIR}/.temp/anvil/create-issue/issue_body_${CLAUDE_SESSION_ID}.md" [--repo <引数で指定された値>]
 ```
 
 script は、gh CLI の有無と認証・git リポジトリか・`origin`・起票先の解決・起票先の存在と Issue の有効化・種別ラベルの有無を順に確かめ、本文ファイルの置き場を作る。コマンドを自分で組み立てて同じ確認をしない。
@@ -231,7 +231,7 @@ UI 関連が確定した場合、以下のいずれか **1 つ以上** を `AskU
 1. `Write` ツールで、4.2 で承認された本文をそのまま `<body-file>` に書く
 2. Issue を作成する。種別のラベルが `missing_labels` に含まれる場合は `--label` を付けない:
    ```bash
-   python3 ${CLAUDE_SKILL_DIR}/scripts/create_issue.py --repo <owner>/<repo> --title "<title>" --body-file "<body-file>" [--label <bug または enhancement>]
+   python3 "${CLAUDE_SKILL_DIR}/scripts/create_issue.py" --repo <owner>/<repo> --title "<title>" --body-file "<body-file>" [--label <bug または enhancement>]
    ```
    - **終了コード 0** → 出力 JSON の `url` / `number` を記録する。script が `<body-file>` を削除している
    - **それ以外** → 出力 JSON の `errors` を提示し、`AskUserQuestion` で再試行 / 中断を確認する。`<body-file>` は残っているので、再試行ではそのまま使う

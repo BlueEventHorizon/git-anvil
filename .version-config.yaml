@@ -40,7 +40,7 @@ changelog:
   section_per_target: true
 
 git:
-  tag_format: "{target}-v{version}"
+  tag_format: "{version}"
   commit_message: "chore: bump {target} to {version}"
   auto_tag: false
   auto_commit: false

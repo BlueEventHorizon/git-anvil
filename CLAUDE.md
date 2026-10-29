@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Claude Code プラグインのマーケットプレイスリポジトリ（marketplace 名 `git-anvil`）。1 プラグインを格納・配布する。
 
-- **anvil** (v0.1.0) — GitHub 連携（commit / PR / Issue 作成）
+- **anvil** (v0.1.1) — GitHub 連携（commit / PR / Issue 作成）
 
 > 上記の版数は `.version-config.yaml` が CLAUDE.md を同期対象として宣言している箇所であり、`/forge:update-version` が機械的に書き換える。手で消したり書式を変えたりしない。
 

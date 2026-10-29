@@ -2,7 +2,7 @@
   "name": "git-anvil",
   "metadata": {
     "description": "GitHub operations toolkit: commit, pull request, and issue creation",
-    "version": "0.1.0"
+    "version": "0.1.1"
   },
   "owner": {
     "name": "k2moons"
@@ -11,7 +11,7 @@
     {
       "name": "anvil",
       "description": "GitHub operations toolkit. Create PRs, manage issues, and automate GitHub workflows.",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "author": {
         "name": "k2moons"
       },

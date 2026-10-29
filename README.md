@@ -4,7 +4,7 @@
 
 A marketplace that ships **anvil**, a Claude Code plugin for GitHub operations: auto-generated commit messages, draft pull requests, and interactive issue creation.
 
-**Marketplace version: 0.1.0**
+**Marketplace version: 0.1.1**
 
 English | [日本語](README.ja.md)
 
@@ -12,7 +12,7 @@ English | [日本語](README.ja.md)
 
 | Plugin    | Version | Description                                                                          |
 | --------- | ------- | ------------------------------------------------------------------------------------ |
-| **anvil** | 0.1.0   | GitHub operations toolkit. Create PRs, manage issues, and automate GitHub workflows. |
+| **anvil** | 0.1.1   | GitHub operations toolkit. Create PRs, manage issues, and automate GitHub workflows. |
 
 ## Skills
 

@@ -30,7 +30,6 @@
   "untracked_paths": [], "stale_staged_paths": [],
   "staged_diff": "diff --git ...",
   "branch": "feature/x",
-  "protected_branch": "main",
   "is_protected": false
 }
 ```
@@ -38,9 +37,7 @@
 - 状態の 5 項目は `inspect_stage_state.py` と同じ判定である
 - `staged_diff`: `git diff --cached`（commit される内容）
 - `branch`: 現在ブランチ。detached HEAD なら `null`
-- `protected_branch`: `develop` → `main` → `master` の順で、ローカルか origin に最初に存在するもの。
-  無ければ `null`
-- `is_protected`: `branch` が `protected_branch` と一致するか
+- `is_protected`: `branch` が `develop` / `main` / `master` のいずれかか（`/anvil:create-pr` と同じ判定）
 
 `commit` の出力は `{"sha": "...", "summary": "..."}`。`push` の出力は `{"action": "push" | "push_set_upstream"}`。
 
@@ -69,7 +66,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import inspect_stage_state  # noqa: E402
 
-PROTECTED_CANDIDATES = ("develop", "main", "master")
+PROTECTED_BRANCHES = frozenset(("develop", "main", "master"))
 
 
 class OpsError(Exception):
@@ -88,21 +85,9 @@ def _stdout(args: list[str]) -> str:
     return proc.stdout
 
 
-def _branch_exists(name: str) -> bool:
-    for ref in (f"refs/heads/{name}", f"refs/remotes/origin/{name}"):
-        if _run(["git", "show-ref", "--verify", "--quiet", ref]).returncode == 0:
-            return True
-    return False
-
-
 def branch_info() -> dict:
     branch = _stdout(["git", "branch", "--show-current"]).strip() or None
-    protected = next((name for name in PROTECTED_CANDIDATES if _branch_exists(name)), None)
-    return {
-        "branch": branch,
-        "protected_branch": protected,
-        "is_protected": branch is not None and branch == protected,
-    }
+    return {"branch": branch, "is_protected": branch in PROTECTED_BRANCHES}
 
 
 def state() -> dict:

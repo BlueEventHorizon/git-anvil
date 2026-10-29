@@ -48,7 +48,7 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/commit_ops.py prepare --message-file "${CLAU
 
 script は、変更の状態・ステージ済みの差分・現在ブランチと保護ブランチを返し、コミットメッセージの置き場を作る。`git status` 等を自分で実行して同じ判定をしない。
 
-- **終了コード 0** → 出力 JSON を **現在の状態** として記録する（`tracked_paths` / `staged_paths` / `unstaged_paths` / `untracked_paths` / `stale_staged_paths` / `staged_diff` / `branch` / `protected_branch` / `is_protected` / `message_file`）。以降の `<message-file>` は `message_file` を指す
+- **終了コード 0** → 出力 JSON を **現在の状態** として記録する（`tracked_paths` / `staged_paths` / `unstaged_paths` / `untracked_paths` / `stale_staged_paths` / `staged_diff` / `branch` / `is_protected` / `message_file`）。以降の `<message-file>` は `message_file` を指す
 - **それ以外** → 出力 JSON の `errors` を提示してエラー終了する
 
 `staged_paths` / `unstaged_paths` / `untracked_paths` が**すべて空** → エラー終了:
@@ -146,7 +146,7 @@ Phase 2 でステージ対象が確定した後に生成する。commit され�
 
 ### 3.5.1 現在のブランチと保護ブランチ
 
-現在の状態の `branch` / `protected_branch` / `is_protected` を使う。保護ブランチは `develop` → `main` → `master` の順で、リポジトリに存在するものを採用する（script が判定済み）。
+現在の状態の `branch` / `is_protected` を使う。保護ブランチは `develop` / `main` / `master` のすべてである（`create-pr` と同じ。script が判定済み）。
 
 ### 3.5.2 `is_protected` が `true` の場合
 

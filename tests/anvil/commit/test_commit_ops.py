@@ -3,7 +3,7 @@
 一時リポジトリと、origin 役の bare リポジトリを実際に作って確かめる。次を固定する。
 
 - `prepare` が状態の 5 項目・ステージ済みの差分・ブランチ判定を返し、メッセージの置き場を作ること
-- 保護ブランチの判定（develop → main → master の最初に存在するもの。detached HEAD）
+- 保護ブランチの判定（develop / main / master のいずれか。detached HEAD）
 - `stage` の `--tracked` / `--path`
 - `commit` がメッセージファイルで commit し、成功時だけファイルを消すこと
 - `push` が追跡設定の有無で `-u` を付け分けること
@@ -63,15 +63,16 @@ class PrepareTest(RepoTestCase):
         self.assertEqual(result["untracked_paths"], ["new.txt"])
         self.assertIn("+a2", result["staged_diff"])
         self.assertEqual(result["branch"], "main")
-        self.assertEqual(result["protected_branch"], "main")
         self.assertTrue(result["is_protected"])
         self.assertTrue(Path(self.message_file).parent.is_dir())
 
-    def test_develop_is_the_protected_branch_when_it_exists(self):
+    def test_main_is_protected_even_when_develop_exists(self):
         _git(self.work, "branch", "develop")
-        result = mod.prepare(self.message_file)
-        self.assertEqual(result["protected_branch"], "develop")
-        self.assertFalse(result["is_protected"])
+        self.assertTrue(mod.prepare(self.message_file)["is_protected"])
+
+    def test_feature_branch_is_not_protected(self):
+        _git(self.work, "checkout", "-q", "-b", "feature/x")
+        self.assertFalse(mod.prepare(self.message_file)["is_protected"])
 
     def test_detached_head(self):
         _git(self.work, "checkout", "-q", "--detach")

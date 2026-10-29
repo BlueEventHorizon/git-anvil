@@ -16,9 +16,11 @@
 """
 
 import importlib.util
+import io
 import json
 import unittest
 from pathlib import Path
+from unittest import mock
 
 _SCRIPT_PATH = (
     Path(__file__).resolve().parents[3]
@@ -225,6 +227,37 @@ class CliContractTest(unittest.TestCase):
     def test_requested_json_fields_include_link_for_failure_reporting(self):
         self.assertIn("link", ci_mod._JSON_FIELDS)
         self.assertIn("bucket", ci_mod._JSON_FIELDS)
+
+    def test_delay_defaults_to_zero(self):
+        self.assertEqual(ci_mod.parse_args(["--pr", "1", "--repo", "o/r"]).delay, 0)
+
+
+class DelayTest(unittest.TestCase):
+    """`--delay` は問い合わせの前に 1 回だけ待つ。待機のループは持たない。"""
+
+    class _Stdout(io.StringIO):
+        def reconfigure(self, **_kwargs):
+            pass
+
+    def _main(self, *extra):
+        out = self._Stdout()
+        with mock.patch.object(ci_mod.time, "sleep") as sleep, \
+                mock.patch.object(ci_mod, "_run_gh", return_value=(_checks("pass"), "", 0)) as gh, \
+                mock.patch.object(ci_mod.sys, "stdout", out):
+            code = ci_mod.main(["--pr", "1", "--repo", "o/r", *extra])
+        return code, sleep, gh, json.loads(out.getvalue())
+
+    def test_sleeps_once_before_query(self):
+        code, sleep, gh, payload = self._main("--delay", "30")
+        self.assertEqual(code, 0)
+        sleep.assert_called_once_with(30)
+        gh.assert_called_once()
+        self.assertEqual(payload["status"], "succeeded")
+
+    def test_no_sleep_without_delay(self):
+        _, sleep, gh, _ = self._main()
+        sleep.assert_not_called()
+        gh.assert_called_once()
 
 
 if __name__ == "__main__":

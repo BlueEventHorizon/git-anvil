@@ -5,8 +5,8 @@ description: |
   GitHub Issue として記録する。Issue 種別をユーザーが選択し、種別別の必須セクションを対話で収集して起票する。
   トリガー: "issue を作りたい", "問題を記録したい", "バグを issue にして", "課題を起票", "要望を issue にして"
 user-invocable: true
-argument-hint: "[issue-title]"
-allowed-tools: Bash, AskUserQuestion, Read
+argument-hint: "[--repo <owner>/<repo>] [issue-title]"
+allowed-tools: Bash(python3 "${CLAUDE_SKILL_DIR}/scripts/*), Bash(gh issue view *), Write, AskUserQuestion
 ---
 
 # /anvil:create-issue
@@ -16,59 +16,49 @@ allowed-tools: Bash, AskUserQuestion, Read
 ## コマンド構文
 
 ```
-/anvil:create-issue [issue-title]
+/anvil:create-issue [--repo <owner>/<repo>] [issue-title]
 ```
 
-| 引数        | 内容                                             |
-| ----------- | ------------------------------------------------ |
-| issue-title | Issue タイトルのヒント（省略時は対話で確定する） |
+| 引数        | 内容                                                                            |
+| ----------- | ------------------------------------------------------------------------------- |
+| --repo      | 起票先リポジトリ（`[HOST/]OWNER/REPO`）。省略時はカレントリポジトリ（`origin`） |
+| issue-title | Issue タイトルのヒント（省略時は対話で確定する）                                |
 
 ---
 
-## Phase 0: 環境確認
+## Phase 0: 環境確認と起票先の解決
 
-### 0.1 gh CLI の確認
+### 0.1 確認と解決 [MANDATORY]
 
-```bash
-gh --version
-```
+起票先を誤ると、無関係なリポジトリに Issue が公開される。削除しても通知・検索結果に残るため、取り返しがつかない。
 
-- **失敗** → エラー終了:
-  ```
-  Error: gh CLI が必要です。
-  インストール: https://cli.github.com/
-  ```
-
-### 0.2 gh CLI 認証確認
+**`--repo` は、利用者が引数に明示したときだけ渡す。** 会話の文脈（話題に出たプロジェクト名、参照された Issue の URL 等）から AI が起票先を推測して補ってはならない。
 
 ```bash
-gh auth status
+python3 "${CLAUDE_SKILL_DIR}/scripts/preflight.py" --body-file "${CLAUDE_PROJECT_DIR}/.temp/anvil/create-issue/issue_body_${CLAUDE_SESSION_ID}.md" [--repo <引数で指定された値>]
 ```
 
-- **未認証** → エラー終了:
-  ```
-  Error: gh CLI が認証されていません。
-  実行してください: gh auth login
-  ```
+script は、gh CLI の有無と認証・git リポジトリか・`origin`・起票先の解決・起票先の存在と Issue の有効化・種別ラベルの有無を順に確かめ、本文ファイルの置き場を作る。コマンドを自分で組み立てて同じ確認をしない。
 
-### 0.3 リポジトリ確認
+- **終了コード 0** → 出力 JSON の `target`（起票先）/ `source`（`argument` か `origin`）/ `origin_repo` / `is_external` / `missing_labels` / `body_file` を記録する。以降の `<owner>/<repo>` はすべて `target` を、`<body-file>` は `body_file` を指す。起票先を自分で組み立て直さない
+- **それ以外** → 出力 JSON の `errors` をそのまま提示してエラー終了する
 
-```bash
-git rev-parse --is-inside-work-tree
-git remote get-url origin
+内容の収集（Phase 1 以降）より前に確かめるのは、入力を終えた後で起票先の誤りに気付く事態を避けるためである。
+
+### 0.2 カレントと異なる起票先の確認 [CRITICAL]
+
+`is_external` が `true` の場合、`AskUserQuestion` で確認する:
+
+```
+起票先 <target> は、カレントリポジトリ（<origin_repo>）と異なります。
 ```
 
-- git リポジトリでない → エラー終了
-- リモート未設定 → エラー終了
+| 選択肢                | 動作                       |
+| --------------------- | -------------------------- |
+| `<target> に起票する` | Phase 1 へ                 |
+| `中断する`            | 終了（Issue を作成しない） |
 
-### 0.4 .git_information.yaml の解決
-
-`.git_information.yaml` がプロジェクトルートに存在するか確認する。
-
-- **存在する** → 読み込んで `github.owner` / `github.repo` を取得し、以降の `--repo` 引数に使用する
-- **存在しない** → `gh repo view --json nameWithOwner --jq '.nameWithOwner'` で `<owner>/<repo>` を取得する
-
-> 取得した `<owner>/<repo>` は Phase 4 の `gh issue create` で使用する。
+`is_external` が `false` の場合は確認せず Phase 1 へ進む。
 
 ---
 
@@ -219,11 +209,14 @@ UI 関連が確定した場合、以下のいずれか **1 つ以上** を `AskU
 `AskUserQuestion` を使用して以下を提示し承認を得る:
 
 ```
+作成先: <target>（解決元: <引数 または カレントリポジトリ>）
 タイトル: <title>
-ラベル: <bug または enhancement>
+ラベル: <bug または enhancement。missing_labels に含まれるなら「なし（起票先に <ラベル> が無い）」>
 本文プレビュー（先頭 30 行）:
 <本文の先頭部分>
 ```
+
+**作成先の行は省略しない。** `is_external` が `true` の場合は、作成先の行に「カレントリポジトリ（<origin_repo>）と異なる」と併記する。
 
 | 選択肢       | 動作                                                      |
 | ------------ | --------------------------------------------------------- |
@@ -233,23 +226,15 @@ UI 関連が確定した場合、以下のいずれか **1 つ以上** を `AskU
 
 ### 4.3 Issue 作成
 
-特殊文字（バッククォート・ドル記号等）が含まれても安全に渡すため、本文を一時ファイルに書き出してから `--body-file` で渡す。一時ファイルは `mktemp -d` で実行ごとに一意なディレクトリを作って置き、`trap` で確実に削除する（固定パスは並行実行時に別 Issue の本文と衝突する）:
+特殊文字（引用符・バッククォート・ドル記号等）が含まれても安全に渡すため、本文はファイルにして渡す。本文ファイルは `Write` ツールで書く。シェル（ヒアドキュメント・`echo` 等）で書き出さない。
 
-```bash
-workdir=$(mktemp -d)
-trap 'rm -rf "$workdir"' EXIT
-tee "$workdir/issue_body.md" <<'BODY'
-<本文>
-BODY
-
-gh issue create \
-  --repo <owner>/<repo> \
-  --title "<title>" \
-  --label "<bug または enhancement>" \
-  --body-file "$workdir/issue_body.md"
-```
-
-作成された Issue 番号（`#N`）と Issue URL を記録する。
+1. `Write` ツールで、4.2 で承認された本文をそのまま `<body-file>` に書く
+2. Issue を作成する。種別のラベルが `missing_labels` に含まれる場合は `--label` を付けない:
+   ```bash
+   python3 "${CLAUDE_SKILL_DIR}/scripts/create_issue.py" --repo <owner>/<repo> --title "<title>" --body-file "<body-file>" [--label <bug または enhancement>]
+   ```
+   - **終了コード 0** → 出力 JSON の `url` / `number` を記録する。script が `<body-file>` を削除している
+   - **それ以外** → 出力 JSON の `errors` を提示し、`AskUserQuestion` で再試行 / 中断を確認する。`<body-file>` は残っているので、再試行ではそのまま使う
 
 ---
 
@@ -273,14 +258,12 @@ Issue を作成しました:
 
 ## エラーハンドリング
 
-| エラー                                                         | 対応                                                              |
-| -------------------------------------------------------------- | ----------------------------------------------------------------- |
-| gh CLI 未インストール                                          | `https://cli.github.com/` のインストール手順を案内して終了        |
-| gh CLI 未認証                                                  | `gh auth login` を案内して終了                                    |
-| git リポジトリでない                                           | エラー終了。`git init` または該当ディレクトリへの `cd` を案内     |
-| リモート未設定                                                 | エラー終了。`git remote add origin <url>` を案内                  |
-| 中核セクションが不在表現のみ                                   | `AskUserQuestion` で再入力 / 中断を確認                           |
-| UI 関連 Feature Request で Figma 参照情報が未提供              | `AskUserQuestion` で再入力 / 中断を確認                           |
-| タイトルが 256 文字を超える                                    | `AskUserQuestion` で短縮版の再入力を依頼                          |
-| `gh issue create` 失敗                                         | `AskUserQuestion` でエラー内容を提示し、再試行 / 中断を確認       |
-| ラベルがリポジトリに存在しない（`bug` / `enhancement` 未作成） | エラーを表示し、ラベルなしで再試行するか `AskUserQuestion` で確認 |
+| エラー                                                      | 対応                                                       |
+| ----------------------------------------------------------- | ---------------------------------------------------------- |
+| `preflight.py` が失敗（gh・認証・リポジトリ・起票先の問題） | 出力 JSON の `errors` を提示してエラー終了                 |
+| 起票先がカレントリポジトリと異なる                          | Phase 0.2 で確認。`中断する` なら終了                      |
+| 中核セクションが不在表現のみ                                | `AskUserQuestion` で再入力 / 中断を確認                    |
+| UI 関連 Feature Request で Figma 参照情報が未提供           | `AskUserQuestion` で再入力 / 中断を確認                    |
+| タイトルが 256 文字を超える                                 | `AskUserQuestion` で短縮版の再入力を依頼                   |
+| `create_issue.py` が失敗                                    | `errors` を提示し、`AskUserQuestion` で再試行 / 中断を確認 |
+| 種別のラベルが起票先に無い（`missing_labels`）              | ラベルなしで起票する。4.2 のプレビューにその旨を示す       |

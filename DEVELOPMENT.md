@@ -47,11 +47,13 @@ claude plugin validate ./anvil --strict    # プラグイン
 
 ### 2.2 SKILL.md を編集した場合
 
-セッションを再起動する（`--plugin-dir` オプション付きで再実行）。編集内容はセッション内では即時反映されない。
+`/reload-plugins` を実行する。セッションを再起動しなくても、編集内容が読み込み直される。
 
-```bash
-claude --plugin-dir ./anvil
 ```
+/reload-plugins
+```
+
+反映されたかは、スキル起動時に表示される Base directory が `anvil/skills/<skill>` を指しているかで確かめる。
 
 ---
 
@@ -119,6 +121,7 @@ dprint check    # 差分チェックのみ（CI 向け）
 - `--plugin-dir` のパスが正しいか確認（`./anvil` のようにプラグインルートを指定）
 - `anvil/.claude-plugin/plugin.json` が壊れていないか確認（`claude plugin validate ./anvil --strict`）
 - `anvil/skills/{skill}/SKILL.md` の frontmatter `name` がディレクトリ名と一致し、`user-invocable: true` であるか確認
+- 起動時の Base directory が `~/.claude/plugins/cache/` を指す（ローカル版ではなくインストール済みの版が動く）ときは、`~/.claude/settings.json` の `enabledPlugins` に `"anvil@inline": false` が無いか確認する。`@inline` は `--plugin-dir` で読み込んだプラグインを指し、`false` だとローカル版が無効になる
 
 ### 6.2 スクリプトが期待した動作をしない
 

@@ -47,11 +47,13 @@ claude plugin validate ./anvil --strict    # プラグイン
 
 ### 2.2 SKILL.md を編集した場合
 
-セッションを再起動する（`--plugin-dir` オプション付きで再実行）。編集内容はセッション内では即時反映されない。
+`/reload-plugins` を実行する。セッションを再起動しなくても、編集内容が読み込み直される。
 
-```bash
-claude --plugin-dir ./anvil
 ```
+/reload-plugins
+```
+
+反映されたかは、スキル起動時に表示される Base directory が `anvil/skills/<skill>` を指しているかで確かめる。
 
 ---
 
@@ -63,8 +65,27 @@ SKILL.md から呼び出されるスクリプトは、Claude セッションを�
 # ステージ状態の検査（commit）
 python3 anvil/skills/commit/scripts/inspect_stage_state.py
 
+# commit の git 操作（commit。prepare 以外は実際にステージ・commit・push される）
+python3 anvil/skills/commit/scripts/commit_ops.py prepare --message-file .temp/anvil/commit/commit_msg_test.txt
+python3 anvil/skills/commit/scripts/commit_ops.py {stage|new-branch|commit|push} ...
+
+# PR 作成前の確認と本文の材料の収集（create-pr）
+python3 anvil/skills/create-pr/scripts/preflight.py --body-file .temp/anvil/create-pr/pr_body_test.md [--base <branch>]
+
+# 現在ブランチの push（create-pr。実際に push される）
+python3 anvil/skills/create-pr/scripts/push_branch.py --branch <branch>
+
+# 本文ファイルから draft PR を作成（create-pr。実際に作成される）
+python3 anvil/skills/create-pr/scripts/create_pr.py --base <branch> --title "<title>" --body-file <path>
+
 # PR の CI 状態の検査（create-pr）
-python3 anvil/skills/create-pr/scripts/inspect_ci_status.py --pr <PR番号> --repo <owner>/<repo>
+python3 anvil/skills/create-pr/scripts/inspect_ci_status.py --pr <PR番号> --repo <owner>/<repo> [--delay 30]
+
+# Issue 起票前の確認と起票先の解決（create-issue）
+python3 anvil/skills/create-issue/scripts/preflight.py --body-file .temp/anvil/create-issue/issue_body_test.md [--repo <owner>/<repo>]
+
+# 本文ファイルから Issue を作成（create-issue。実際に起票される）
+python3 anvil/skills/create-issue/scripts/create_issue.py --repo <owner>/<repo> --title "<title>" --body-file <path> [--label <label>]
 ```
 
 `python3` が見つからない環境では `/opt/homebrew/bin/python3` を使う。
@@ -100,6 +121,7 @@ dprint check    # 差分チェックのみ（CI 向け）
 - `--plugin-dir` のパスが正しいか確認（`./anvil` のようにプラグインルートを指定）
 - `anvil/.claude-plugin/plugin.json` が壊れていないか確認（`claude plugin validate ./anvil --strict`）
 - `anvil/skills/{skill}/SKILL.md` の frontmatter `name` がディレクトリ名と一致し、`user-invocable: true` であるか確認
+- 起動時の Base directory が `~/.claude/plugins/cache/` を指す（ローカル版ではなくインストール済みの版が動く）ときは、`~/.claude/settings.json` の `enabledPlugins` に `"anvil@inline": false` が無いか確認する。`@inline` は `--plugin-dir` で読み込んだプラグインを指し、`false` だとローカル版が無効になる
 
 ### 6.2 スクリプトが期待した動作をしない
 

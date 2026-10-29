@@ -64,6 +64,10 @@ push 直後は GitHub 側でチェックが登録される前に問い合わせ�
 `--watch` は使わず、**問い合わせた時点の状態だけ**を返す。`status: pending` / `not_reported` を受けて
 待つか打ち切るかは呼び出し側（SKILL）が決める。進行の管理は決定論的に作れないため実行系へ移さない。
 
+`--delay N` は、問い合わせの前に N 秒待つだけである（1 回の呼び出しで 1 回だけ問い合わせる）。
+SKILL が `sleep N && python3 …` と複合コマンドで待つと、許可ルールの `python3 …` に一致せず、
+呼ぶたびに確認が出るため、待ちをこの script の中へ移している。
+
 ## 終了コードを状態の判定に使わない
 
 状態の判定は stdout の JSON だけで行う。`gh pr checks` の終了コードの値域は `--json` を併用したときの
@@ -104,6 +108,7 @@ import argparse
 import json
 import subprocess
 import sys
+import time
 
 # `gh pr checks --json bucket` が返す値域。gh の実装（pkg/cmd/pr/checks）に対応する。
 # ここに無い値が来たら、gh 側の値域が変わったということであり、集計から落とさずエラーにする。
@@ -226,13 +231,21 @@ def parse_args(argv=None):
         description="PR の CI チェック状態を検査し、状態語を JSON で出力する（read-only）"
     )
     parser.add_argument("--pr", required=True, help="PR 番号")
-    parser.add_argument("--repo", required=True, help="対象リポジトリ（OWNER/REPO）")
+    parser.add_argument("--repo", required=True, help="対象リポジトリ（HOST/OWNER/REPO）")
+    parser.add_argument(
+        "--delay",
+        type=int,
+        default=0,
+        help="問い合わせの前に待つ秒数（既定 0）。待機のループは呼び出し側が回す",
+    )
     return parser.parse_args(argv)
 
 
 def main(argv=None) -> int:
     sys.stdout.reconfigure(encoding="utf-8")
     args = parse_args(argv)
+    if args.delay > 0:
+        time.sleep(args.delay)
     stdout, stderr, returncode = _run_gh(args.pr, args.repo)
     result = inspect(stdout, stderr, returncode)
     print(json.dumps(result, ensure_ascii=False))

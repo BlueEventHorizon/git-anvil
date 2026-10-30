@@ -63,10 +63,14 @@ _DEFAULT_HOST = "github.com"
 # GitHub の owner は英数字とハイフン、repo は英数字と `.` `_` `-`。
 _OWNER = r"[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?"
 _REPO = r"[A-Za-z0-9._-]+"
-_REPO_ARG = re.compile(rf"(?:(?P<host>[A-Za-z0-9.-]+)/)?(?P<owner>{_OWNER})/(?P<repo>{_REPO})")
+_REPO_ARG = re.compile(
+    rf"(?:(?P<host>[A-Za-z0-9.-]+)/)?(?P<owner>{_OWNER})/(?P<repo>{_REPO})"
+)
 
 # `scheme://[user@]host[:port]/path`
-_URL_FORM = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*://(?:[^@/]+@)?(?P<host>[^/:]+)(?::\d+)?/(?P<path>.+)$")
+_URL_FORM = re.compile(
+    r"^[A-Za-z][A-Za-z0-9+.-]*://(?:[^@/]+@)?(?P<host>[^/:]+)(?::\d+)?/(?P<path>.+)$"
+)
 # `[user@]host:path`（scp 形式）
 _SCP_FORM = re.compile(r"^(?:[^@/]+@)?(?P<host>[^/:]+):(?P<path>[^/].*)$")
 
@@ -83,7 +87,9 @@ def parse_repo_arg(value: str) -> tuple[str, str, str]:
     """`--repo` の値を (host, owner, repo) に分解する。URL や `.git` 付きは受け付けない。"""
     m = _REPO_ARG.fullmatch(value)
     if not m or not _repo_name_ok(m.group("repo")):
-        raise ResolveError(f"--repo の形式が不正です（[HOST/]OWNER/REPO で指定してください）: {value}")
+        raise ResolveError(
+            f"--repo の形式が不正です（[HOST/]OWNER/REPO で指定してください）: {value}"
+        )
     return (m.group("host") or _DEFAULT_HOST, m.group("owner"), m.group("repo"))
 
 
@@ -130,14 +136,18 @@ def resolve(origin_url: str, repo_arg: str | None) -> dict:
 
 
 def _origin_url() -> str:
-    proc = subprocess.run(["git", "remote", "get-url", "origin"], capture_output=True, text=True)
+    proc = subprocess.run(
+        ["git", "remote", "get-url", "origin"], capture_output=True, text=True
+    )
     if proc.returncode != 0:
         raise ResolveError(f"origin を取得できません: {proc.stderr.strip()}")
     return proc.stdout
 
 
 def parse_args(argv=None):
-    parser = argparse.ArgumentParser(description="Issue の起票先リポジトリを解決し JSON で出力する（read-only）")
+    parser = argparse.ArgumentParser(
+        description="Issue の起票先リポジトリを解決し JSON で出力する（read-only）"
+    )
     parser.add_argument("--repo", help="起票先（[HOST/]OWNER/REPO）。省略時は origin")
     return parser.parse_args(argv)
 

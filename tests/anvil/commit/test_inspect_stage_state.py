@@ -18,10 +18,16 @@ from pathlib import Path
 
 _SCRIPT_PATH = (
     Path(__file__).resolve().parents[3]
-    / "anvil" / "skills" / "commit" / "scripts" / "inspect_stage_state.py"
+    / "anvil"
+    / "skills"
+    / "commit"
+    / "scripts"
+    / "inspect_stage_state.py"
 )
 
-_spec = importlib.util.spec_from_file_location("anvil_inspect_stage_state", _SCRIPT_PATH)
+_spec = importlib.util.spec_from_file_location(
+    "anvil_inspect_stage_state", _SCRIPT_PATH
+)
 inspect_mod = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(inspect_mod)
 
@@ -45,7 +51,9 @@ class TrackedAndUntrackedTest(unittest.TestCase):
 
     def test_generated_index_is_not_special_cased(self):
         """ToC 除外は撤回済み。生成物も追跡済みの変更として同じく扱う。"""
-        out = _porcelain(" M .claude/.doc-advisor/toc/rules-abc/toc.yaml", " M docs/a.md")
+        out = _porcelain(
+            " M .claude/.doc-advisor/toc/rules-abc/toc.yaml", " M docs/a.md"
+        )
         result = inspect_mod.inspect(out)
         self.assertEqual(
             result["tracked_paths"],

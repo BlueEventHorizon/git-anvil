@@ -19,7 +19,14 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-_SCRIPT = Path(__file__).resolve().parents[3] / "anvil" / "skills" / "create-pr" / "scripts" / "preflight.py"
+_SCRIPT = (
+    Path(__file__).resolve().parents[3]
+    / "anvil"
+    / "skills"
+    / "create-pr"
+    / "scripts"
+    / "preflight.py"
+)
 
 _spec = importlib.util.spec_from_file_location("anvil_create_pr_preflight", _SCRIPT)
 mod = importlib.util.module_from_spec(_spec)
@@ -39,7 +46,9 @@ class RepoTestCase(unittest.TestCase):
         _git(self.root, "config", "user.name", "t")
         _git(self.root, "remote", "add", "origin", "https://github.com/octo/app.git")
         self._commit("base.txt", "init")
-        self.body_file = str(self.root / ".temp" / "anvil" / "create-pr" / "pr_body_s1.md")
+        self.body_file = str(
+            self.root / ".temp" / "anvil" / "create-pr" / "pr_body_s1.md"
+        )
         patcher = mock.patch.object(mod.gh_checks, "check_gh")
         patcher.start()
         self.addCleanup(patcher.stop)
@@ -86,7 +95,9 @@ class BaseTest(RepoTestCase):
         self._feature()
         _git(self.root, "update-ref", "refs/remotes/origin/develop", "main")
         result = mod.preflight("develop", self.body_file)
-        self.assertEqual((result["base"], result["base_ref"]), ("develop", "origin/develop"))
+        self.assertEqual(
+            (result["base"], result["base_ref"]), ("develop", "origin/develop")
+        )
 
     def test_unknown_base_argument(self):
         self._feature()
@@ -115,16 +126,24 @@ class FailureTest(RepoTestCase):
 class RepoFilesTest(RepoTestCase):
     def test_template_and_ci_are_detected(self):
         (self.root / ".github" / "workflows").mkdir(parents=True)
-        (self.root / ".github" / "workflows" / "ci.yaml").write_text("on: push\n", encoding="utf-8")
-        (self.root / ".github" / "PULL_REQUEST_TEMPLATE.md").write_text("## 概要\n", encoding="utf-8")
+        (self.root / ".github" / "workflows" / "ci.yaml").write_text(
+            "on: push\n", encoding="utf-8"
+        )
+        (self.root / ".github" / "PULL_REQUEST_TEMPLATE.md").write_text(
+            "## 概要\n", encoding="utf-8"
+        )
         self._feature()
         result = mod.preflight(None, self.body_file)
-        self.assertEqual(result["template"], str(self.root / ".github" / "PULL_REQUEST_TEMPLATE.md"))
+        self.assertEqual(
+            result["template"], str(self.root / ".github" / "PULL_REQUEST_TEMPLATE.md")
+        )
         self.assertTrue(result["has_ci"])
 
     def test_workflows_dir_without_yaml_is_not_ci(self):
         (self.root / ".github" / "workflows").mkdir(parents=True)
-        (self.root / ".github" / "workflows" / "README.md").write_text("x\n", encoding="utf-8")
+        (self.root / ".github" / "workflows" / "README.md").write_text(
+            "x\n", encoding="utf-8"
+        )
         self._feature()
         self.assertFalse(mod.preflight(None, self.body_file)["has_ci"])
 
@@ -135,7 +154,9 @@ class CliTest(unittest.TestCase):
         self.addCleanup(shutil.rmtree, tmp, True)
         proc = subprocess.run(
             [sys.executable, str(_SCRIPT), "--body-file", str(Path(tmp) / "x.md")],
-            capture_output=True, text=True, cwd=tmp,
+            capture_output=True,
+            text=True,
+            cwd=tmp,
         )
         self.assertEqual(proc.returncode, 1)
         self.assertEqual(len(json.loads(proc.stdout)["errors"]), 1)

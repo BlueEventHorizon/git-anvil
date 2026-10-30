@@ -95,7 +95,9 @@ def _stdout(args: list[str], what: str) -> str:
 def current_branch() -> str:
     branch = _stdout(["git", "branch", "--show-current"], "現在ブランチ").strip()
     if not branch:
-        raise PreflightError("detached HEAD です。PR を作成するブランチへ切り替えてから再実行してください")
+        raise PreflightError(
+            "detached HEAD です。PR を作成するブランチへ切り替えてから再実行してください"
+        )
     return branch
 
 
@@ -116,13 +118,23 @@ def resolve_base(base_arg: str | None) -> tuple[str, str]:
         if ref:
             return name, ref
     if base_arg:
-        raise PreflightError(f"ベースブランチ {base_arg} がローカルにも origin にもありません")
-    raise PreflightError("ベースブランチを決められません（develop / main / master のいずれも無い）。引数で指定してください")
+        raise PreflightError(
+            f"ベースブランチ {base_arg} がローカルにも origin にもありません"
+        )
+    raise PreflightError(
+        "ベースブランチを決められません（develop / main / master のいずれも無い）。引数で指定してください"
+    )
 
 
 def collect_commits(base_ref: str) -> list[dict]:
     out = _stdout(
-        ["git", "log", f"{base_ref}..HEAD", f"--format=%H{_FIELD}%s{_FIELD}%b{_RECORD}"], "コミット一覧"
+        [
+            "git",
+            "log",
+            f"{base_ref}..HEAD",
+            f"--format=%H{_FIELD}%s{_FIELD}%b{_RECORD}",
+        ],
+        "コミット一覧",
     )
     commits = []
     for record in out.split(_RECORD):
@@ -141,12 +153,20 @@ def preflight(base_arg: str | None, body_file: str) -> dict:
     base, base_ref = resolve_base(base_arg)
     commits = collect_commits(base_ref)
     if not commits:
-        raise PreflightError(f"{base} からのコミットがありません。変更をコミットしてから再試行してください")
-    diffstat = _stdout(["git", "diff", f"{base_ref}...HEAD", "--stat"], "変更ファイル統計")
-    root = Path(_stdout(["git", "rev-parse", "--show-toplevel"], "リポジトリルート").strip())
+        raise PreflightError(
+            f"{base} からのコミットがありません。変更をコミットしてから再試行してください"
+        )
+    diffstat = _stdout(
+        ["git", "diff", f"{base_ref}...HEAD", "--stat"], "変更ファイル統計"
+    )
+    root = Path(
+        _stdout(["git", "rev-parse", "--show-toplevel"], "リポジトリルート").strip()
+    )
     template = root / ".github" / "PULL_REQUEST_TEMPLATE.md"
     workflows = root / ".github" / "workflows"
-    has_ci = workflows.is_dir() and (any(workflows.glob("*.yml")) or any(workflows.glob("*.yaml")))
+    has_ci = workflows.is_dir() and (
+        any(workflows.glob("*.yml")) or any(workflows.glob("*.yaml"))
+    )
     Path(body_file).parent.mkdir(parents=True, exist_ok=True)
     return {
         "branch": branch,
@@ -162,9 +182,17 @@ def preflight(base_arg: str | None, body_file: str) -> dict:
 
 
 def parse_args(argv=None):
-    parser = argparse.ArgumentParser(description="PR 作成前の確認と本文の材料の収集を行い JSON で出力する")
-    parser.add_argument("--base", help="ベースブランチ。省略時は develop > main > master")
-    parser.add_argument("--body-file", required=True, help="本文ファイルのパス（親ディレクトリを作成する）")
+    parser = argparse.ArgumentParser(
+        description="PR 作成前の確認と本文の材料の収集を行い JSON で出力する"
+    )
+    parser.add_argument(
+        "--base", help="ベースブランチ。省略時は develop > main > master"
+    )
+    parser.add_argument(
+        "--body-file",
+        required=True,
+        help="本文ファイルのパス（親ディレクトリを作成する）",
+    )
     return parser.parse_args(argv)
 
 

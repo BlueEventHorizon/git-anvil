@@ -75,17 +75,25 @@ def _run(args: list[str]) -> subprocess.CompletedProcess:
 
 
 def check_target(target: str) -> None:
-    proc = _run(["gh", "repo", "view", target, "--json", "nameWithOwner,hasIssuesEnabled"])
+    proc = _run(
+        ["gh", "repo", "view", target, "--json", "nameWithOwner,hasIssuesEnabled"]
+    )
     if proc.returncode != 0:
-        raise PreflightError(f"起票先 {target} を参照できません（存在しない・権限が無い）: {proc.stderr.strip()}")
+        raise PreflightError(
+            f"起票先 {target} を参照できません（存在しない・権限が無い）: {proc.stderr.strip()}"
+        )
     if not json.loads(proc.stdout).get("hasIssuesEnabled", False):
         raise PreflightError(f"起票先 {target} は Issue が無効です")
 
 
 def missing_labels(target: str) -> list[str]:
-    proc = _run(["gh", "label", "list", "--repo", target, "--json", "name", "--limit", "1000"])
+    proc = _run(
+        ["gh", "label", "list", "--repo", target, "--json", "name", "--limit", "1000"]
+    )
     if proc.returncode != 0:
-        raise PreflightError(f"起票先 {target} のラベルを取得できません: {proc.stderr.strip()}")
+        raise PreflightError(
+            f"起票先 {target} のラベルを取得できません: {proc.stderr.strip()}"
+        )
     names = {item["name"] for item in json.loads(proc.stdout)}
     return [label for label in KIND_LABELS if label not in names]
 
@@ -105,9 +113,15 @@ def preflight(repo_arg: str | None, body_file: str) -> dict:
 
 
 def parse_args(argv=None):
-    parser = argparse.ArgumentParser(description="Issue 起票前の確認と起票先の解決を行い JSON で出力する")
+    parser = argparse.ArgumentParser(
+        description="Issue 起票前の確認と起票先の解決を行い JSON で出力する"
+    )
     parser.add_argument("--repo", help="起票先（[HOST/]OWNER/REPO）。省略時は origin")
-    parser.add_argument("--body-file", required=True, help="本文ファイルのパス（親ディレクトリを作成する）")
+    parser.add_argument(
+        "--body-file",
+        required=True,
+        help="本文ファイルのパス（親ディレクトリを作成する）",
+    )
     return parser.parse_args(argv)
 
 

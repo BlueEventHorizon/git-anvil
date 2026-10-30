@@ -18,10 +18,16 @@ from pathlib import Path
 
 _SCRIPT_PATH = (
     Path(__file__).resolve().parents[3]
-    / "anvil" / "skills" / "create-issue" / "scripts" / "resolve_target_repo.py"
+    / "anvil"
+    / "skills"
+    / "create-issue"
+    / "scripts"
+    / "resolve_target_repo.py"
 )
 
-_spec = importlib.util.spec_from_file_location("anvil_resolve_target_repo", _SCRIPT_PATH)
+_spec = importlib.util.spec_from_file_location(
+    "anvil_resolve_target_repo", _SCRIPT_PATH
+)
 mod = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(mod)
 
@@ -37,7 +43,11 @@ class ParseRemoteUrlTest(unittest.TestCase):
             "https://user@github.com/octo/app.git": ("github.com", "octo", "app"),
             "ssh://git@github.com/octo/app.git": ("github.com", "octo", "app"),
             "ssh://git@github.com:22/octo/app.git": ("github.com", "octo", "app"),
-            "git@ghe.example.com:team/my.repo_1.git": ("ghe.example.com", "team", "my.repo_1"),
+            "git@ghe.example.com:team/my.repo_1.git": (
+                "ghe.example.com",
+                "team",
+                "my.repo_1",
+            ),
             "https://github.com/octo/app.git\n": ("github.com", "octo", "app"),
         }
         for url, expected in cases.items():
@@ -61,7 +71,8 @@ class ParseRepoArgTest(unittest.TestCase):
     def test_accepted(self):
         self.assertEqual(mod.parse_repo_arg("octo/app"), ("github.com", "octo", "app"))
         self.assertEqual(
-            mod.parse_repo_arg("ghe.example.com/team/app"), ("ghe.example.com", "team", "app")
+            mod.parse_repo_arg("ghe.example.com/team/app"),
+            ("ghe.example.com", "team", "app"),
         )
 
     def test_rejected(self):
@@ -127,16 +138,23 @@ class CliTest(unittest.TestCase):
         self.addCleanup(shutil.rmtree, tmp, True)
         subprocess.run(["git", "init", "-q", tmp], check=True)
         if origin is not None:
-            subprocess.run(["git", "-C", tmp, "remote", "add", "origin", origin], check=True)
+            subprocess.run(
+                ["git", "-C", tmp, "remote", "add", "origin", origin], check=True
+            )
         return tmp
 
     def _run(self, cwd: str, *args: str):
         return subprocess.run(
-            [sys.executable, str(_SCRIPT_PATH), *args], capture_output=True, text=True, cwd=cwd
+            [sys.executable, str(_SCRIPT_PATH), *args],
+            capture_output=True,
+            text=True,
+            cwd=cwd,
         )
 
     def test_outputs_json(self):
-        proc = self._run(self._git_repo("https://github.com/octo/app.git"), "--repo", "octo/other")
+        proc = self._run(
+            self._git_repo("https://github.com/octo/app.git"), "--repo", "octo/other"
+        )
         self.assertEqual(proc.returncode, 0, proc.stderr)
         self.assertEqual(
             json.loads(proc.stdout),
@@ -154,7 +172,9 @@ class CliTest(unittest.TestCase):
         self.assertEqual(len(json.loads(proc.stdout)["errors"]), 1)
 
     def test_invalid_argument_fails(self):
-        proc = self._run(self._git_repo("https://github.com/octo/app.git"), "--repo", "nope")
+        proc = self._run(
+            self._git_repo("https://github.com/octo/app.git"), "--repo", "nope"
+        )
         self.assertEqual(proc.returncode, 1)
         self.assertIn("--repo", json.loads(proc.stdout)["errors"][0])
 

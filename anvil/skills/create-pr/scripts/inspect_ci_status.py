@@ -231,7 +231,9 @@ def parse_args(argv=None):
         description="PR の CI チェック状態を検査し、状態語を JSON で出力する（read-only）"
     )
     parser.add_argument("--pr", required=True, help="PR 番号")
-    parser.add_argument("--repo", required=True, help="対象リポジトリ（HOST/OWNER/REPO）")
+    parser.add_argument(
+        "--repo", required=True, help="対象リポジトリ（HOST/OWNER/REPO）"
+    )
     parser.add_argument(
         "--delay",
         type=int,

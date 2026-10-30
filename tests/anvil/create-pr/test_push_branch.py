@@ -18,7 +18,14 @@ import tempfile
 import unittest
 from pathlib import Path
 
-_SCRIPT = Path(__file__).resolve().parents[3] / "anvil" / "skills" / "create-pr" / "scripts" / "push_branch.py"
+_SCRIPT = (
+    Path(__file__).resolve().parents[3]
+    / "anvil"
+    / "skills"
+    / "create-pr"
+    / "scripts"
+    / "push_branch.py"
+)
 
 _spec = importlib.util.spec_from_file_location("anvil_create_pr_push_branch", _SCRIPT)
 mod = importlib.util.module_from_spec(_spec)
@@ -26,7 +33,9 @@ _spec.loader.exec_module(mod)
 
 
 def _git(cwd, *args):
-    return subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True).stdout
+    return subprocess.run(
+        ["git", *args], cwd=cwd, check=True, capture_output=True, text=True
+    ).stdout
 
 
 class PushTest(unittest.TestCase):
@@ -56,8 +65,12 @@ class PushTest(unittest.TestCase):
 
     def test_new_branch_is_pushed_with_upstream(self):
         self.assertEqual(mod.push("feature/x"), {"action": "pushed_new"})
-        self.assertEqual(self._remote_head(), _git(self.work, "rev-parse", "HEAD").strip())
-        self.assertEqual(_git(self.work, "config", "branch.feature/x.remote").strip(), "origin")
+        self.assertEqual(
+            self._remote_head(), _git(self.work, "rev-parse", "HEAD").strip()
+        )
+        self.assertEqual(
+            _git(self.work, "config", "branch.feature/x.remote").strip(), "origin"
+        )
 
     def test_up_to_date_does_not_push(self):
         mod.push("feature/x")
@@ -67,13 +80,23 @@ class PushTest(unittest.TestCase):
         mod.push("feature/x")
         self._commit("b")
         self.assertEqual(mod.push("feature/x"), {"action": "pushed"})
-        self.assertEqual(self._remote_head(), _git(self.work, "rev-parse", "HEAD").strip())
+        self.assertEqual(
+            self._remote_head(), _git(self.work, "rev-parse", "HEAD").strip()
+        )
 
     def test_push_failure_is_reported(self):
         mod.push("feature/x")
         # リモート側を先に進め、ローカルの push を non-fast-forward で拒否させる
         other = self.work.parent / "other"
-        _git(self.work.parent, "clone", "-q", "-b", "feature/x", str(self.remote), str(other))
+        _git(
+            self.work.parent,
+            "clone",
+            "-q",
+            "-b",
+            "feature/x",
+            str(self.remote),
+            str(other),
+        )
         _git(other, "config", "user.email", "t@example.invalid")
         _git(other, "config", "user.name", "t")
         (other / "c").write_text("c", encoding="utf-8")
@@ -87,14 +110,19 @@ class PushTest(unittest.TestCase):
 
 class CliTest(unittest.TestCase):
     def test_branch_is_required(self):
-        proc = subprocess.run([sys.executable, str(_SCRIPT)], capture_output=True, text=True)
+        proc = subprocess.run(
+            [sys.executable, str(_SCRIPT)], capture_output=True, text=True
+        )
         self.assertEqual(proc.returncode, 2)
 
     def test_error_is_json_on_stdout(self):
         tmp = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, tmp, True)
         proc = subprocess.run(
-            [sys.executable, str(_SCRIPT), "--branch", "x"], capture_output=True, text=True, cwd=tmp
+            [sys.executable, str(_SCRIPT), "--branch", "x"],
+            capture_output=True,
+            text=True,
+            cwd=tmp,
         )
         self.assertEqual(proc.returncode, 1)
         self.assertEqual(len(json.loads(proc.stdout)["errors"]), 1)

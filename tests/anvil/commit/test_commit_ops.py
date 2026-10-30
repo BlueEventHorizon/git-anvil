@@ -19,7 +19,14 @@ import tempfile
 import unittest
 from pathlib import Path
 
-_SCRIPT = Path(__file__).resolve().parents[3] / "anvil" / "skills" / "commit" / "scripts" / "commit_ops.py"
+_SCRIPT = (
+    Path(__file__).resolve().parents[3]
+    / "anvil"
+    / "skills"
+    / "commit"
+    / "scripts"
+    / "commit_ops.py"
+)
 
 _spec = importlib.util.spec_from_file_location("anvil_commit_ops", _SCRIPT)
 mod = importlib.util.module_from_spec(_spec)
@@ -27,7 +34,9 @@ _spec.loader.exec_module(mod)
 
 
 def _git(cwd, *args):
-    return subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True).stdout
+    return subprocess.run(
+        ["git", *args], cwd=cwd, check=True, capture_output=True, text=True
+    ).stdout
 
 
 class RepoTestCase(unittest.TestCase):
@@ -44,7 +53,9 @@ class RepoTestCase(unittest.TestCase):
         self._write("a.txt", "a\n")
         _git(self.work, "add", "a.txt")
         _git(self.work, "commit", "-q", "-m", "init")
-        self.message_file = str(self.work / ".temp" / "anvil" / "commit" / "commit_msg_s1.txt")
+        self.message_file = str(
+            self.work / ".temp" / "anvil" / "commit" / "commit_msg_s1.txt"
+        )
         cwd = Path.cwd()
         self.addCleanup(os.chdir, cwd)
         os.chdir(self.work)
@@ -100,10 +111,14 @@ class CommitTest(RepoTestCase):
         self._write("a.txt", "a2\n")
         _git(self.work, "add", "a.txt")
         Path(self.message_file).parent.mkdir(parents=True)
-        Path(self.message_file).write_text("fix: a の値を直す\n\n本文 `x` $HOME\n", encoding="utf-8")
+        Path(self.message_file).write_text(
+            "fix: a の値を直す\n\n本文 `x` $HOME\n", encoding="utf-8"
+        )
         result = mod.commit(self.message_file)
         self.assertEqual(result["summary"], "fix: a の値を直す")
-        self.assertEqual(_git(self.work, "log", "-1", "--format=%b").strip(), "本文 `x` $HOME")
+        self.assertEqual(
+            _git(self.work, "log", "-1", "--format=%b").strip(), "本文 `x` $HOME"
+        )
         self.assertFalse(Path(self.message_file).exists())
 
     def test_failure_keeps_message_file(self):
@@ -117,7 +132,9 @@ class CommitTest(RepoTestCase):
 class BranchAndPushTest(RepoTestCase):
     def test_new_branch_then_push_sets_upstream_once(self):
         mod.new_branch("feature/x")
-        self.assertEqual(_git(self.work, "branch", "--show-current").strip(), "feature/x")
+        self.assertEqual(
+            _git(self.work, "branch", "--show-current").strip(), "feature/x"
+        )
         self.assertEqual(mod.push("feature/x"), {"action": "push_set_upstream"})
         self._write("a.txt", "a3\n")
         _git(self.work, "commit", "-qam", "b")
@@ -130,15 +147,25 @@ class BranchAndPushTest(RepoTestCase):
 
 class CliTest(unittest.TestCase):
     def test_subcommand_is_required(self):
-        proc = subprocess.run([sys.executable, str(_SCRIPT)], capture_output=True, text=True)
+        proc = subprocess.run(
+            [sys.executable, str(_SCRIPT)], capture_output=True, text=True
+        )
         self.assertEqual(proc.returncode, 2)
 
     def test_error_is_json_on_stdout(self):
         tmp = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, tmp, True)
         proc = subprocess.run(
-            [sys.executable, str(_SCRIPT), "commit", "--message-file", str(Path(tmp) / "none.txt")],
-            capture_output=True, text=True, cwd=tmp,
+            [
+                sys.executable,
+                str(_SCRIPT),
+                "commit",
+                "--message-file",
+                str(Path(tmp) / "none.txt"),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=tmp,
         )
         self.assertEqual(proc.returncode, 1)
         self.assertEqual(len(json.loads(proc.stdout)["errors"]), 1)

@@ -17,7 +17,14 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-_SCRIPT = Path(__file__).resolve().parents[3] / "anvil" / "skills" / "create-issue" / "scripts" / "create_issue.py"
+_SCRIPT = (
+    Path(__file__).resolve().parents[3]
+    / "anvil"
+    / "skills"
+    / "create-issue"
+    / "scripts"
+    / "create_issue.py"
+)
 
 _spec = importlib.util.spec_from_file_location("anvil_create_issue_create", _SCRIPT)
 mod = importlib.util.module_from_spec(_spec)
@@ -27,7 +34,9 @@ URL = "https://github.com/octo/app/issues/42"
 
 
 def _proc(returncode=0, stdout="", stderr=""):
-    return subprocess.CompletedProcess(args=[], returncode=returncode, stdout=stdout, stderr=stderr)
+    return subprocess.CompletedProcess(
+        args=[], returncode=returncode, stdout=stdout, stderr=stderr
+    )
 
 
 class CreateTest(unittest.TestCase):
@@ -49,8 +58,19 @@ class CreateTest(unittest.TestCase):
         self.assertFalse(self.body.exists())
         self.assertEqual(
             args,
-            ["gh", "issue", "create", "--repo", "octo/app", "--title", "[Bug] t", "--body-file", str(self.body),
-             "--label", "bug"],
+            [
+                "gh",
+                "issue",
+                "create",
+                "--repo",
+                "octo/app",
+                "--title",
+                "[Bug] t",
+                "--body-file",
+                str(self.body),
+                "--label",
+                "bug",
+            ],
         )
 
     def test_without_label(self):
@@ -81,8 +101,18 @@ class CliTest(unittest.TestCase):
     def test_error_is_json_on_stdout(self):
         """本文ファイルが無ければ gh を呼ぶ前に失敗し、errors を返す。"""
         proc = subprocess.run(
-            [sys.executable, str(_SCRIPT), "--repo", "octo/app", "--title", "t", "--body-file", "/nonexistent/x.md"],
-            capture_output=True, text=True,
+            [
+                sys.executable,
+                str(_SCRIPT),
+                "--repo",
+                "octo/app",
+                "--title",
+                "t",
+                "--body-file",
+                "/nonexistent/x.md",
+            ],
+            capture_output=True,
+            text=True,
         )
         self.assertEqual(proc.returncode, 1)
         self.assertEqual(len(json.loads(proc.stdout)["errors"]), 1)

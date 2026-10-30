@@ -91,7 +91,9 @@ def branch_info() -> dict:
 
 
 def state() -> dict:
-    result = inspect_stage_state.inspect(_stdout(["git", "status", "--porcelain", "-z"]))
+    result = inspect_stage_state.inspect(
+        _stdout(["git", "status", "--porcelain", "-z"])
+    )
     result["staged_diff"] = _stdout(["git", "diff", "--cached"])
     result.update(branch_info())
     return result
@@ -106,7 +108,9 @@ def prepare(message_file: str) -> dict:
 
 def stage(tracked: bool, paths: list[str]) -> dict:
     if not tracked and not paths:
-        raise OpsError("ステージする対象がありません（--tracked か --path を指定してください）")
+        raise OpsError(
+            "ステージする対象がありません（--tracked か --path を指定してください）"
+        )
     if tracked:
         _stdout(["git", "add", "-u"])
     if paths:
@@ -132,7 +136,10 @@ def commit(message_file: str) -> dict:
 
 
 def push(branch: str) -> dict:
-    has_upstream = _run(["git", "rev-parse", "--abbrev-ref", f"{branch}@{{upstream}}"]).returncode == 0
+    has_upstream = (
+        _run(["git", "rev-parse", "--abbrev-ref", f"{branch}@{{upstream}}"]).returncode
+        == 0
+    )
     if has_upstream:
         _stdout(["git", "push"])
         return {"action": "push"}
@@ -143,11 +150,22 @@ def push(branch: str) -> dict:
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(description="/anvil:commit の git 操作")
     sub = parser.add_subparsers(dest="command", required=True)
-    p = sub.add_parser("prepare", help="状態・差分・ブランチ判定を返し、メッセージの置き場を作る")
+    p = sub.add_parser(
+        "prepare", help="状態・差分・ブランチ判定を返し、メッセージの置き場を作る"
+    )
     p.add_argument("--message-file", required=True)
     p = sub.add_parser("stage", help="git add -u / git add -- <path>")
-    p.add_argument("--tracked", action="store_true", help="追跡済みファイルを全てステージする（git add -u）")
-    p.add_argument("--path", action="append", default=[], help="ステージする未追跡ファイル（複数可）")
+    p.add_argument(
+        "--tracked",
+        action="store_true",
+        help="追跡済みファイルを全てステージする（git add -u）",
+    )
+    p.add_argument(
+        "--path",
+        action="append",
+        default=[],
+        help="ステージする未追跡ファイル（複数可）",
+    )
     p = sub.add_parser("new-branch", help="git checkout -b")
     p.add_argument("--name", required=True)
     p = sub.add_parser("commit", help="git commit -F")

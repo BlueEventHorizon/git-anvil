@@ -81,7 +81,9 @@ def push(branch: str) -> dict:
 
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(description="現在ブランチを origin へ push する")
-    parser.add_argument("--branch", required=True, help="push するブランチ（現在ブランチ）")
+    parser.add_argument(
+        "--branch", required=True, help="push するブランチ（現在ブランチ）"
+    )
     return parser.parse_args(argv)
 
 

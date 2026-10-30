@@ -32,7 +32,7 @@ jobs:
         run: python3 -m unittest discover -s tests -p 'test_*.py'
 
       - name: Install dprint
-        run: curl -fsSL https://dprint.dev/install.sh | sh -s 0.55.1
+        run: curl -fsSL https://dprint.dev/install.sh | sh -s 0.64.3
 
       - name: Run dprint check
         run: $HOME/.dprint/bin/dprint check

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """本文ファイルから draft PR を作成する CLI。
 
-`/anvil:create-pr` の Phase 4.2 が使う。本文ファイルは AI が `Write` ツールで書いたものを受け取る。
+`/anvil:create-pr` の Phase 3.2 が使う。本文ファイルは AI が `Write` ツールで書いたものを受け取る。
 
 ## なぜ script にするか
 

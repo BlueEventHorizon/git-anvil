@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """現在ブランチを origin へ push し、リモートをローカル HEAD に一致させる CLI。
 
-`/anvil:create-pr` の Phase 4.1 が使う。
+`/anvil:create-pr` の Phase 3.1 が使う。
 
 ## なぜ script にするか
 

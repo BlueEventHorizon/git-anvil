@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """PR を作成する前の環境確認と、PR 本文の材料の収集をまとめて行う CLI。
 
-`/anvil:create-pr` の Phase 1〜3 が使う。
+`/anvil:create-pr` の Phase 1 が使う。
 
 ## なぜ script にするか
 

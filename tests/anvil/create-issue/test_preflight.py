@@ -19,9 +19,17 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-_SCRIPTS = Path(__file__).resolve().parents[3] / "anvil" / "skills" / "create-issue" / "scripts"
+_SCRIPTS = (
+    Path(__file__).resolve().parents[3]
+    / "anvil"
+    / "skills"
+    / "create-issue"
+    / "scripts"
+)
 
-_spec = importlib.util.spec_from_file_location("anvil_create_issue_preflight", _SCRIPTS / "preflight.py")
+_spec = importlib.util.spec_from_file_location(
+    "anvil_create_issue_preflight", _SCRIPTS / "preflight.py"
+)
 mod = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(mod)
 
@@ -29,7 +37,9 @@ ORIGIN = "git@github.com:octo/app.git\n"
 
 
 def _proc(returncode=0, stdout="", stderr=""):
-    return subprocess.CompletedProcess(args=[], returncode=returncode, stdout=stdout, stderr=stderr)
+    return subprocess.CompletedProcess(
+        args=[], returncode=returncode, stdout=stdout, stderr=stderr
+    )
 
 
 class FakeRunner:
@@ -40,8 +50,14 @@ class FakeRunner:
             ("gh", "auth"): _proc(),
             ("git", "rev-parse"): _proc(stdout="true\n"),
             ("git", "remote"): _proc(stdout=ORIGIN),
-            ("gh", "repo"): _proc(stdout=json.dumps({"nameWithOwner": "octo/app", "hasIssuesEnabled": True})),
-            ("gh", "label"): _proc(stdout=json.dumps([{"name": "bug"}, {"name": "enhancement"}])),
+            ("gh", "repo"): _proc(
+                stdout=json.dumps(
+                    {"nameWithOwner": "octo/app", "hasIssuesEnabled": True}
+                )
+            ),
+            ("gh", "label"): _proc(
+                stdout=json.dumps([{"name": "bug"}, {"name": "enhancement"}])
+            ),
         }
         self.results.update(overrides or {})
         self.calls = []
@@ -55,7 +71,9 @@ class PreflightTest(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, self.tmp, True)
-        self.body_file = str(Path(self.tmp) / ".temp" / "anvil" / "create-issue" / "issue_body_s1.md")
+        self.body_file = str(
+            Path(self.tmp) / ".temp" / "anvil" / "create-issue" / "issue_body_s1.md"
+        )
         patcher = mock.patch.object(mod.shutil, "which", return_value="/usr/bin/gh")
         patcher.start()
         self.addCleanup(patcher.stop)
@@ -79,11 +97,25 @@ class PreflightTest(unittest.TestCase):
         result = self._preflight(runner, "octo/other")
         self.assertEqual(result["target"], "github.com/octo/other")
         self.assertTrue(result["is_external"])
-        self.assertIn(["gh", "repo", "view", "github.com/octo/other", "--json", "nameWithOwner,hasIssuesEnabled"], runner.calls)
+        self.assertIn(
+            [
+                "gh",
+                "repo",
+                "view",
+                "github.com/octo/other",
+                "--json",
+                "nameWithOwner,hasIssuesEnabled",
+            ],
+            runner.calls,
+        )
 
     def test_missing_labels_are_listed_in_fixed_order(self):
-        runner = FakeRunner({("gh", "label"): _proc(stdout=json.dumps([{"name": "question"}]))})
-        self.assertEqual(self._preflight(runner)["missing_labels"], ["bug", "enhancement"])
+        runner = FakeRunner(
+            {("gh", "label"): _proc(stdout=json.dumps([{"name": "question"}]))}
+        )
+        self.assertEqual(
+            self._preflight(runner)["missing_labels"], ["bug", "enhancement"]
+        )
 
     def test_gh_not_installed(self):
         with mock.patch.object(mod.shutil, "which", return_value=None):
@@ -107,7 +139,13 @@ class PreflightTest(unittest.TestCase):
 
     def test_issues_disabled(self):
         runner = FakeRunner(
-            {("gh", "repo"): _proc(stdout=json.dumps({"nameWithOwner": "octo/app", "hasIssuesEnabled": False}))}
+            {
+                ("gh", "repo"): _proc(
+                    stdout=json.dumps(
+                        {"nameWithOwner": "octo/app", "hasIssuesEnabled": False}
+                    )
+                )
+            }
         )
         with self.assertRaisesRegex(mod.PreflightError, "Issue が無効"):
             self._preflight(runner)
@@ -123,15 +161,24 @@ class CliTest(unittest.TestCase):
         tmp = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, tmp, True)
         proc = subprocess.run(
-            [sys.executable, str(_SCRIPTS / "preflight.py"), "--body-file", str(Path(tmp) / "x.md")],
-            capture_output=True, text=True, cwd=tmp,
+            [
+                sys.executable,
+                str(_SCRIPTS / "preflight.py"),
+                "--body-file",
+                str(Path(tmp) / "x.md"),
+            ],
+            capture_output=True,
+            text=True,
+            cwd=tmp,
         )
         self.assertEqual(proc.returncode, 1)
         self.assertEqual(len(json.loads(proc.stdout)["errors"]), 1)
 
     def test_body_file_is_required(self):
         proc = subprocess.run(
-            [sys.executable, str(_SCRIPTS / "preflight.py")], capture_output=True, text=True
+            [sys.executable, str(_SCRIPTS / "preflight.py")],
+            capture_output=True,
+            text=True,
         )
         self.assertEqual(proc.returncode, 2)
 

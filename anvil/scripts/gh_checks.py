@@ -36,8 +36,12 @@ def check_gh(runner=run) -> None:
 def check_git_repo(runner=run) -> str:
     """git リポジトリであることを確かめ、origin の URL を返す。"""
     if runner(["git", "rev-parse", "--is-inside-work-tree"]).returncode != 0:
-        raise CheckError("git リポジトリではありません。対象のリポジトリへ移動してから再実行してください")
+        raise CheckError(
+            "git リポジトリではありません。対象のリポジトリへ移動してから再実行してください"
+        )
     proc = runner(["git", "remote", "get-url", "origin"])
     if proc.returncode != 0:
-        raise CheckError("リモート origin が設定されていません。実行してください: git remote add origin <url>")
+        raise CheckError(
+            "リモート origin が設定されていません。実行してください: git remote add origin <url>"
+        )
     return proc.stdout

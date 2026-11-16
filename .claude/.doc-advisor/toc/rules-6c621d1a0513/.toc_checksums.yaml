@@ -1,0 +1,10 @@
+# ToC checksums for key: rules
+# Auto-generated - do not edit
+generated_at: 2026-11-16T08:00:56Z
+file_count: 5
+checksums:
+  docs/rules/plugin_claude_code_authoring_guide.md: 3f333153214e01da0ef6d7abbc5a17fbd622231644c1eefb77614fe4d1e6baa5
+  docs/rules/plugin_claude_code_reference.md: 002db132450de15a6951e84ad9f5a57cac6d4f40320678b7d3bb5f128fcec781
+  docs/rules/plugin_implementation_guidelines.md: 6479c6e115ed4e4bd79f7ac3a5cf0b15bd1620ab96d7301a10c4f0f873a1e529
+  docs/rules/plugin_script_error_output_rules.md: 562e43b085a5bb9c9107d441db98133145c642d018df605596b5648da07208a5
+  docs/rules/plugin_uv_usage_rules.md: 5c5ae4d681d8c1bc14aa9ed278d3ce90260233b3501f856a6e320dd90c72766f

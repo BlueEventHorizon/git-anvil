@@ -24,7 +24,11 @@ from unittest import mock
 
 _SCRIPT_PATH = (
     Path(__file__).resolve().parents[3]
-    / "anvil" / "skills" / "create-pr" / "scripts" / "inspect_ci_status.py"
+    / "anvil"
+    / "skills"
+    / "create-pr"
+    / "scripts"
+    / "inspect_ci_status.py"
 )
 
 _spec = importlib.util.spec_from_file_location("anvil_inspect_ci_status", _SCRIPT_PATH)
@@ -105,7 +109,9 @@ class GhFailureTest(unittest.TestCase):
     """`gh` 自体の失敗を「チェック未登録」に畳むと、呼び出し側は来ない登録を待ち続ける。"""
 
     def test_empty_stdout_with_error_raises(self):
-        stderr = "GraphQL: Could not resolve to a PullRequest with the number of 999999."
+        stderr = (
+            "GraphQL: Could not resolve to a PullRequest with the number of 999999."
+        )
         with self.assertRaises(ci_mod.GhCommandError):
             ci_mod.inspect("", stderr, 1)
 
@@ -138,12 +144,16 @@ class ExitCodeIsNotUsedForJudgmentTest(unittest.TestCase):
 class UnknownBucketTest(unittest.TestCase):
     def test_unknown_bucket_raises(self):
         """黙って捨てると、残りが全て pass のとき succeeded を返してしまう。"""
-        stdout = json.dumps([{"name": "t", "bucket": "surprise", "state": "?", "link": ""}])
+        stdout = json.dumps(
+            [{"name": "t", "bucket": "surprise", "state": "?", "link": ""}]
+        )
         with self.assertRaises(ci_mod.UnknownBucketError):
             ci_mod.inspect(stdout, "", 0)
 
     def test_unknown_bucket_message_names_the_check_and_value(self):
-        stdout = json.dumps([{"name": "lint", "bucket": "surprise", "state": "?", "link": ""}])
+        stdout = json.dumps(
+            [{"name": "lint", "bucket": "surprise", "state": "?", "link": ""}]
+        )
         with self.assertRaises(ci_mod.UnknownBucketError) as ctx:
             ci_mod.inspect(stdout, "", 0)
         self.assertIn("lint", str(ctx.exception))
@@ -241,9 +251,13 @@ class DelayTest(unittest.TestCase):
 
     def _main(self, *extra):
         out = self._Stdout()
-        with mock.patch.object(ci_mod.time, "sleep") as sleep, \
-                mock.patch.object(ci_mod, "_run_gh", return_value=(_checks("pass"), "", 0)) as gh, \
-                mock.patch.object(ci_mod.sys, "stdout", out):
+        with (
+            mock.patch.object(ci_mod.time, "sleep") as sleep,
+            mock.patch.object(
+                ci_mod, "_run_gh", return_value=(_checks("pass"), "", 0)
+            ) as gh,
+            mock.patch.object(ci_mod.sys, "stdout", out),
+        ):
             code = ci_mod.main(["--pr", "1", "--repo", "o/r", *extra])
         return code, sleep, gh, json.loads(out.getvalue())
 

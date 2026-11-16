@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """現在ブランチを origin へ push し、リモートをローカル HEAD に一致させる CLI。
 
-`/anvil:create-pr` の Phase 4.1 が使う。
+`/anvil:create-pr` の Phase 3.1 が使う。
 
 ## なぜ script にするか
 
@@ -81,7 +81,9 @@ def push(branch: str) -> dict:
 
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(description="現在ブランチを origin へ push する")
-    parser.add_argument("--branch", required=True, help="push するブランチ（現在ブランチ）")
+    parser.add_argument(
+        "--branch", required=True, help="push するブランチ（現在ブランチ）"
+    )
     return parser.parse_args(argv)
 
 

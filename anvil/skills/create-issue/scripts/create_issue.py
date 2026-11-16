@@ -56,7 +56,17 @@ def create(repo: str, title: str, body_file: str, label: str | None) -> dict:
     path = Path(body_file)
     if not path.is_file():
         raise CreateError(f"本文ファイルがありません: {body_file}")
-    args = ["gh", "issue", "create", "--repo", repo, "--title", title, "--body-file", str(path)]
+    args = [
+        "gh",
+        "issue",
+        "create",
+        "--repo",
+        repo,
+        "--title",
+        title,
+        "--body-file",
+        str(path),
+    ]
     if label:
         args += ["--label", label]
     proc = _run(args)
@@ -64,13 +74,17 @@ def create(repo: str, title: str, body_file: str, label: str | None) -> dict:
         raise CreateError(f"gh issue create が失敗しました: {proc.stderr.strip()}")
     m = _ISSUE_URL.search(proc.stdout)
     if not m:
-        raise CreateError(f"gh issue create の出力から Issue の URL を読み取れません: {proc.stdout.strip()}")
+        raise CreateError(
+            f"gh issue create の出力から Issue の URL を読み取れません: {proc.stdout.strip()}"
+        )
     path.unlink()
     return {"url": m.group(0), "number": int(m.group(1))}
 
 
 def parse_args(argv=None):
-    parser = argparse.ArgumentParser(description="本文ファイルから GitHub Issue を作成する")
+    parser = argparse.ArgumentParser(
+        description="本文ファイルから GitHub Issue を作成する"
+    )
     parser.add_argument("--repo", required=True, help="起票先（[HOST/]OWNER/REPO）")
     parser.add_argument("--title", required=True, help="Issue タイトル")
     parser.add_argument("--body-file", required=True, help="本文ファイルのパス")

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """本文ファイルから draft PR を作成する CLI。
 
-`/anvil:create-pr` の Phase 4.2 が使う。本文ファイルは AI が `Write` ツールで書いたものを受け取る。
+`/anvil:create-pr` の Phase 3.2 が使う。本文ファイルは AI が `Write` ツールで書いたものを受け取る。
 
 ## なぜ script にするか
 
@@ -49,7 +49,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-_PR_URL = re.compile(r"https?://(?P<host>[^/\s]+)/(?P<owner>[^/\s]+)/(?P<repo>[^/\s]+)/pull/(?P<number>\d+)")
+_PR_URL = re.compile(
+    r"https?://(?P<host>[^/\s]+)/(?P<owner>[^/\s]+)/(?P<repo>[^/\s]+)/pull/(?P<number>\d+)"
+)
 
 
 class CreateError(Exception):
@@ -72,12 +74,27 @@ def create(base: str, title: str, body_file: str) -> dict:
     path = Path(body_file)
     if not path.is_file():
         raise CreateError(f"本文ファイルがありません: {body_file}")
-    proc = _run(["gh", "pr", "create", "--draft", "--base", base, "--title", title, "--body-file", str(path)])
+    proc = _run(
+        [
+            "gh",
+            "pr",
+            "create",
+            "--draft",
+            "--base",
+            base,
+            "--title",
+            title,
+            "--body-file",
+            str(path),
+        ]
+    )
     if proc.returncode != 0:
         raise CreateError(f"gh pr create が失敗しました: {proc.stderr.strip()}")
     result = parse_pr_url(proc.stdout)
     if result is None:
-        raise CreateError(f"gh pr create の出力から PR の URL を読み取れません: {proc.stdout.strip()}")
+        raise CreateError(
+            f"gh pr create の出力から PR の URL を読み取れません: {proc.stdout.strip()}"
+        )
     path.unlink()
     return result
 

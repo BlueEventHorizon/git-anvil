@@ -5,7 +5,7 @@ description: |
   トリガー: "コミットして", "commit して", "push して", "commit & push"
 user-invocable: true
 argument-hint: "[message]"
-allowed-tools: Bash(python3 "${CLAUDE_SKILL_DIR}/scripts/*), Bash(bash "${CLAUDE_SKILL_DIR}/scripts/*), Write, AskUserQuestion
+allowed-tools: Bash(python3 "${CLAUDE_SKILL_DIR}/scripts/*), Bash(bash "${CLAUDE_SKILL_DIR}/scripts/*), Read, Write, AskUserQuestion
 ---
 
 # /anvil:commit
@@ -43,12 +43,14 @@ bash "${CLAUDE_SKILL_DIR}/scripts/run_dprint_fmt.sh"
 ## Phase 1: 変更の状態を調べる
 
 ```bash
-python3 "${CLAUDE_SKILL_DIR}/scripts/commit_ops.py" prepare --message-file "${CLAUDE_PROJECT_DIR}/.temp/anvil/commit/commit_msg_${CLAUDE_SESSION_ID}.txt"
+python3 "${CLAUDE_SKILL_DIR}/scripts/commit_ops.py" prepare --message-file "${CLAUDE_PROJECT_DIR}/.temp/anvil/commit/commit_msg_${CLAUDE_SESSION_ID}.txt" --diff-file "${CLAUDE_PROJECT_DIR}/.temp/anvil/commit/staged_diff_${CLAUDE_SESSION_ID}.diff"
 ```
 
-script は、変更の状態・ステージ済みの差分・現在ブランチと保護ブランチを返し、コミットメッセージの置き場を作る。`git status` 等を自分で実行して同じ判定をしない。
+script は、変更の状態・現在ブランチと保護ブランチを返し、ステージ済みの差分をファイルへ書き出し、コミットメッセージの置き場を作る。`git status` 等を自分で実行して同じ判定をしない。
 
-- **終了コード 0** → 出力 JSON を **現在の状態** として記録する（`tracked_paths` / `staged_paths` / `unstaged_paths` / `untracked_paths` / `stale_staged_paths` / `staged_diff` / `branch` / `is_protected` / `message_file`）。以降の `<message-file>` は `message_file` を指す
+以降の `<diff-file>` は、ここで `--diff-file` に渡したパスを指す。
+
+- **終了コード 0** → 出力 JSON を **現在の状態** として記録する（`tracked_paths` / `staged_paths` / `unstaged_paths` / `untracked_paths` / `stale_staged_paths` / `staged_diff_file` / `staged_diffstat` / `branch` / `is_protected` / `message_file`）。以降の `<message-file>` は `message_file` を指す
 - **それ以外** → 出力 JSON の `errors` を提示してエラー終了する
 
 `staged_paths` / `unstaged_paths` / `untracked_paths` が**すべて空** → エラー終了:
@@ -97,7 +99,7 @@ Error: コミットする変更がありません。
 
 `AskUserQuestion` で次を提示する。
 
-- **追跡済みファイルを全てステージする**（既定）→ `python3 "${CLAUDE_SKILL_DIR}/scripts/commit_ops.py" stage --tracked` を実行し、Phase 3 へ進む
+- **追跡済みファイルを全てステージする**（既定）→ `python3 "${CLAUDE_SKILL_DIR}/scripts/commit_ops.py" stage --tracked --diff-file "<diff-file>"` を実行し、Phase 3 へ進む
 - **現在ステージされている内容のまま進む** → `git add` せず Phase 3 へ進む。**下記の条件では提示しない**
 - **ステージせずに終了する** → 終了
 
@@ -112,7 +114,7 @@ Error: コミットする変更がありません。
 
 `stale_staged_paths` が空でない場合は、1 番目の選択肢の説明に「ステージし直して最新の内容にする」ことを明記する（`git add -u` は現在の内容で index を更新するため、これで解消する）。
 
-未追跡ファイル（`untracked_paths`）がある場合は AskUserQuestion を使用して個別にステージするか確認する（`git add -u` の対象外であるため上記の選択とは別に問う）。ステージするものは `python3 "${CLAUDE_SKILL_DIR}/scripts/commit_ops.py" stage --path <パス>`（複数なら `--path` を繰り返す。追跡済みも同時にステージするなら `--tracked` を併せて付ける）で 1 回にまとめて実行する。
+未追跡ファイル（`untracked_paths`）がある場合は AskUserQuestion を使用して個別にステージするか確認する（`git add -u` の対象外であるため上記の選択とは別に問う）。ステージするものは `python3 "${CLAUDE_SKILL_DIR}/scripts/commit_ops.py" stage --path <パス> --diff-file "<diff-file>"`（複数なら `--path` を繰り返す。追跡済みも同時にステージするなら `--tracked` を併せて付ける）で 1 回にまとめて実行する。
 
 `stage` の終了コードが 0 なら、出力 JSON で**現在の状態**を置き換える。それ以外なら `errors` を提示してエラー終了する。
 
@@ -128,7 +130,7 @@ Phase 2 でステージ対象が確定した後に生成する。commit され�
 
 ### 引数なし
 
-現在の状態の `staged_diff`（`git diff --cached`。commit される内容）を解析して要約を自動生成する。変更の性質に応じて以下のプレフィックスを使用:
+現在の状態の `staged_diff_file`（`git diff --cached` を書き出したファイル。commit される内容）を `Read` ツールで読み、解析して要約を自動生成する。差分が長く 1 回で読み切れないときは、`staged_diffstat`（変更ファイル統計）で全体を把握したうえで続きを読む。変更の性質に応じて以下のプレフィックスを使用:
 
 | 変更の性質       | プレフィックス |
 | ---------------- | -------------- |
@@ -182,7 +184,7 @@ Phase 2 でステージ対象が確定した後に生成する。commit され�
 
 - **コミットする** → 次を実行する:
   1. `Write` ツールで、コミットメッセージをそのまま `<message-file>` に書く（シェルで書き出さない）
-  2. `python3 "${CLAUDE_SKILL_DIR}/scripts/commit_ops.py" commit --message-file "<message-file>"` を実行する。終了コード 0 なら script が `<message-file>` を削除している
+  2. `python3 "${CLAUDE_SKILL_DIR}/scripts/commit_ops.py" commit --message-file "<message-file>" --diff-file "<diff-file>"` を実行する。終了コード 0 なら script が `<message-file>` と `<diff-file>` を削除している
 - **キャンセル** → 終了（push は行わない）
 
 コミット失敗（pre-commit hook によるエラー等。終了コード 0 以外）の場合は、AskUserQuestion を使用して `errors` を提示し対応を確認する。`<message-file>` は残っているので、再試行ではそのまま使う。
@@ -199,6 +201,19 @@ Phase 2 でステージ対象が確定した後に生成する。commit され�
 push 失敗（終了コード 0 以外）の場合は AskUserQuestion を使用して `errors` を提示し対応を確認する。
 
 `branch` が `null`（detached HEAD）の場合は push の選択肢を出さず、push できない旨を伝えて終了する。
+
+---
+
+## Phase 6: PR 作成の案内
+
+コミット成功後、push の選択に関わらず、コミットした変更が Issue の修正だと分かるとき（ブランチ名・コミットメッセージ・会話に Issue 番号があるとき）は、終了前に次の注意を表示する:
+
+```
+この変更は Issue #<N> の修正です。PR を作成し、本文に `Closes #<N>` を書いてください（/anvil:create-pr）。
+PR を経由せずにマージすると、Issue が閉じないまま残ることがあります。
+```
+
+Issue 番号が分からないときは表示しない。PR の作成はこのスキルで行わない。
 
 ---
 

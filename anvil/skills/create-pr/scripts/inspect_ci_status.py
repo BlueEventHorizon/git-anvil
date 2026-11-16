@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """PR の CI チェック状態を検査する read-only CLI。
 
-`/anvil:create-pr` の Phase 6 が、CI の結果をどう扱うかを決めるために使う。
+`/anvil:create-pr` の Phase 5 が、CI の結果をどう扱うかを決めるために使う。
 
 ## なぜ script にするか
 

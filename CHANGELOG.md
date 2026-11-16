@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.2] - 2026-11-17
+
+### anvil
+
+- **feat**: commit で Issue の修正をコミットしたとき、PR の作成と、PR 本文への `Closes #N` の記載を促すようにした
+- **fix**: commit が、ステージ済みの差分の本文を script の出力に含めず、ファイルへ書き出すようにした（差分が大きいと出力が途中で切り捨てられ、差分の後ろにあるブランチの判定を読めなくなっていた）
+- **docs**: create-pr の script の説明にある Phase 番号を、SKILL.md の現在の Phase 構成に合わせた
+
+### marketplace
+
+- **chore**: anvil 0.1.2 のリリースに伴い marketplace バージョンをバンプ
+
 ## [0.1.1] - 2026-10-29
 
 ### anvil

@@ -2,10 +2,11 @@
 
 一時リポジトリと、origin 役の bare リポジトリを実際に作って確かめる。次を固定する。
 
-- `prepare` が状態の 5 項目・ステージ済みの差分・ブランチ判定を返し、メッセージの置き場を作ること
+- `prepare` が状態の 5 項目・ブランチ判定を返し、メッセージの置き場を作ること
+- ステージ済みの差分の本文を JSON に入れず、差分ファイルへ書き出すこと（JSON には変更ファイル統計とパスだけ）
 - 保護ブランチの判定（develop / main / master のいずれか。detached HEAD）
 - `stage` の `--tracked` / `--path`
-- `commit` がメッセージファイルで commit し、成功時だけファイルを消すこと
+- `commit` がメッセージファイルで commit し、成功時だけメッセージファイルと差分ファイルを消すこと
 - `push` が追跡設定の有無で `-u` を付け分けること
 """
 
@@ -56,6 +57,9 @@ class RepoTestCase(unittest.TestCase):
         self.message_file = str(
             self.work / ".temp" / "anvil" / "commit" / "commit_msg_s1.txt"
         )
+        self.diff_file = str(
+            self.work / ".temp" / "anvil" / "commit" / "staged_diff_s1.diff"
+        )
         cwd = Path.cwd()
         self.addCleanup(os.chdir, cwd)
         os.chdir(self.work)
@@ -63,31 +67,64 @@ class RepoTestCase(unittest.TestCase):
     def _write(self, name, text):
         (self.work / name).write_text(text, encoding="utf-8")
 
+    def _diff_text(self):
+        return Path(self.diff_file).read_text(encoding="utf-8")
+
 
 class PrepareTest(RepoTestCase):
     def test_reports_state_diff_and_branch(self):
         self._write("a.txt", "a2\n")
         _git(self.work, "add", "a.txt")
         self._write("new.txt", "n\n")
-        result = mod.prepare(self.message_file)
+        result = mod.prepare(self.message_file, self.diff_file)
         self.assertEqual(result["staged_paths"], ["a.txt"])
         self.assertEqual(result["untracked_paths"], ["new.txt"])
-        self.assertIn("+a2", result["staged_diff"])
+        self.assertEqual(result["staged_diff_file"], self.diff_file)
+        self.assertIn("+a2", self._diff_text())
+        self.assertIn("a.txt", result["staged_diffstat"])
         self.assertEqual(result["branch"], "main")
         self.assertTrue(result["is_protected"])
         self.assertTrue(Path(self.message_file).parent.is_dir())
 
+    def test_diff_body_is_not_in_json(self):
+        """差分の本文は JSON に入らない。
+
+        本文を JSON に入れると、差分が大きいコミットで出力が呼び出し側の上限を超え、
+        差分の後ろにある `branch` / `is_protected` ごと切り捨てられる。
+        """
+        body = "".join(f"marker-line-{i}\n" for i in range(5000))
+        self._write("big.txt", body)
+        _git(self.work, "add", "big.txt")
+        result = mod.prepare(self.message_file, self.diff_file)
+        self.assertNotIn("staged_diff", result)
+        self.assertNotIn("marker-line-", json.dumps(result))
+        self.assertIn("+marker-line-4999", self._diff_text())
+        self.assertIn("big.txt", result["staged_diffstat"])
+        self.assertEqual(result["branch"], "main")
+
+    def test_nothing_staged_leaves_no_diff_file(self):
+        """ステージ済みが無ければ差分ファイルを作らず、前回の残りも消す。"""
+        Path(self.diff_file).parent.mkdir(parents=True)
+        Path(self.diff_file).write_text("前回の差分\n", encoding="utf-8")
+        self._write("a.txt", "a2\n")
+        result = mod.prepare(self.message_file, self.diff_file)
+        self.assertIsNone(result["staged_diff_file"])
+        self.assertEqual(result["staged_diffstat"], "")
+        self.assertFalse(Path(self.diff_file).exists())
+
     def test_main_is_protected_even_when_develop_exists(self):
         _git(self.work, "branch", "develop")
-        self.assertTrue(mod.prepare(self.message_file)["is_protected"])
+        result = mod.prepare(self.message_file, self.diff_file)
+        self.assertTrue(result["is_protected"])
 
     def test_feature_branch_is_not_protected(self):
         _git(self.work, "checkout", "-q", "-b", "feature/x")
-        self.assertFalse(mod.prepare(self.message_file)["is_protected"])
+        result = mod.prepare(self.message_file, self.diff_file)
+        self.assertFalse(result["is_protected"])
 
     def test_detached_head(self):
         _git(self.work, "checkout", "-q", "--detach")
-        result = mod.prepare(self.message_file)
+        result = mod.prepare(self.message_file, self.diff_file)
         self.assertIsNone(result["branch"])
         self.assertFalse(result["is_protected"])
 
@@ -97,13 +134,16 @@ class StageTest(RepoTestCase):
         self._write("a.txt", "a2\n")
         self._write("new.txt", "n\n")
         self._write("skip.txt", "s\n")
-        result = mod.stage(True, ["new.txt"])
+        result = mod.stage(True, ["new.txt"], self.diff_file)
         self.assertEqual(result["staged_paths"], ["a.txt", "new.txt"])
         self.assertEqual(result["untracked_paths"], ["skip.txt"])
+        self.assertEqual(result["staged_diff_file"], self.diff_file)
+        self.assertIn("+a2", self._diff_text())
+        self.assertNotIn("staged_diff", result)
 
     def test_nothing_to_stage(self):
         with self.assertRaises(mod.OpsError):
-            mod.stage(False, [])
+            mod.stage(False, [], self.diff_file)
 
 
 class CommitTest(RepoTestCase):
@@ -114,19 +154,23 @@ class CommitTest(RepoTestCase):
         Path(self.message_file).write_text(
             "fix: a の値を直す\n\n本文 `x` $HOME\n", encoding="utf-8"
         )
-        result = mod.commit(self.message_file)
+        Path(self.diff_file).write_text("diff\n", encoding="utf-8")
+        result = mod.commit(self.message_file, self.diff_file)
         self.assertEqual(result["summary"], "fix: a の値を直す")
         self.assertEqual(
             _git(self.work, "log", "-1", "--format=%b").strip(), "本文 `x` $HOME"
         )
         self.assertFalse(Path(self.message_file).exists())
+        self.assertFalse(Path(self.diff_file).exists())
 
     def test_failure_keeps_message_file(self):
         Path(self.message_file).parent.mkdir(parents=True)
         Path(self.message_file).write_text("chore: nothing\n", encoding="utf-8")
+        Path(self.diff_file).write_text("diff\n", encoding="utf-8")
         with self.assertRaises(mod.OpsError):
-            mod.commit(self.message_file)
+            mod.commit(self.message_file, self.diff_file)
         self.assertTrue(Path(self.message_file).exists())
+        self.assertTrue(Path(self.diff_file).exists())
 
 
 class BranchAndPushTest(RepoTestCase):
@@ -162,6 +206,8 @@ class CliTest(unittest.TestCase):
                 "commit",
                 "--message-file",
                 str(Path(tmp) / "none.txt"),
+                "--diff-file",
+                str(Path(tmp) / "none.diff"),
             ],
             capture_output=True,
             text=True,

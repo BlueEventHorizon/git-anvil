@@ -10,13 +10,13 @@
 
 ## サブコマンド
 
-| サブコマンド | 行うこと                                                                        |
-| ------------ | ------------------------------------------------------------------------------- |
-| `prepare`    | 変更の状態・ステージ済みの差分・ブランチの判定を返し、メッセージの置き場を作る |
-| `stage`      | `git add -u`（`--tracked`）と、指定パスの `git add`（`--path`）。状態を返す     |
-| `new-branch` | `git checkout -b <name>`                                                        |
-| `commit`     | メッセージファイルで `git commit -F`。成功したらメッセージファイルを削除する   |
-| `push`       | 追跡設定があれば `git push`、無ければ `git push -u origin <branch>`             |
+| サブコマンド | 行うこと                                                                              |
+| ------------ | ------------------------------------------------------------------------------------- |
+| `prepare`    | 変更の状態・ブランチの判定を返し、差分ファイルを書き、メッセージの置き場を作る        |
+| `stage`      | `git add -u`（`--tracked`）と、指定パスの `git add`（`--path`）。状態を返す           |
+| `new-branch` | `git checkout -b <name>`                                                              |
+| `commit`     | メッセージファイルで `git commit -F`。成功したらメッセージファイルと差分ファイルを消す |
+| `push`       | 追跡設定があれば `git push`、無ければ `git push -u origin <branch>`                   |
 
 ## 出力
 
@@ -28,16 +28,29 @@
 {
   "tracked_paths": [], "staged_paths": [], "unstaged_paths": [],
   "untracked_paths": [], "stale_staged_paths": [],
-  "staged_diff": "diff --git ...",
+  "staged_diff_file": "/repo/.temp/anvil/commit/staged_diff_<session>.diff",
+  "staged_diffstat": " a.py | 2 +-\\n 1 file changed, ...",
   "branch": "feature/x",
   "is_protected": false
 }
 ```
 
 - 状態の 5 項目は `inspect_stage_state.py` と同じ判定である
-- `staged_diff`: `git diff --cached`（commit される内容）
+- `staged_diff_file`: `git diff --cached`（commit される内容）を書き出したファイルのパス。引数で受けた
+  パスそのもの。ステージ済みの変更が無ければ `null`（ファイルも作らず、前回の残りがあれば消す）
+- `staged_diffstat`: `git diff --cached --stat`。ステージ済みの変更が無ければ空文字列
 - `branch`: 現在ブランチ。detached HEAD なら `null`
 - `is_protected`: `branch` が `develop` / `main` / `master` のいずれかか（`/anvil:create-pr` と同じ判定）
+
+### 差分の本文を JSON に入れない
+
+差分の本文は大きさに上限が無い。JSON に入れると、新規ファイルを数件含むだけのコミットで出力が
+呼び出し側の上限を超え、差分の後ろにある `branch` / `is_protected` ごと切り捨てられる（実際に起きた:
+新規 7 ファイルの `stage` で出力が約 54KB になり、呼び出し側へ渡ったのは先頭の約 2KB だった）。
+本文をファイルへ分ければ、JSON の大きさは変更ファイルの件数にしか比例しない。
+
+差分は decode せず、git が出したバイト列のままファイルへ書く。JSON に入れないので、文字列にする
+必要が無い。
 
 `commit` の出力は `{"sha": "...", "summary": "..."}`。`push` の出力は `{"action": "push" | "push_set_upstream"}`。
 
@@ -90,23 +103,46 @@ def branch_info() -> dict:
     return {"branch": branch, "is_protected": branch in PROTECTED_BRANCHES}
 
 
-def state() -> dict:
+def write_staged_diff(diff_file: str) -> str | None:
+    """ステージ済みの差分を `diff_file` へ書き、そのパスを返す。差分が無ければ `None`。
+
+    差分が無いときはファイルを作らず、前回の残りがあれば消す。残すと、呼び出し側が
+    今回の差分として古い内容を読む。
+    """
+    args = ["git", "diff", "--cached"]
+    proc = subprocess.run(args, capture_output=True)
+    if proc.returncode != 0:
+        detail = proc.stderr.decode("utf-8", errors="replace").strip()
+        raise OpsError(f"{' '.join(args)} が失敗しました: {detail}")
+    path = Path(diff_file)
+    if not proc.stdout:
+        path.unlink(missing_ok=True)
+        return None
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(proc.stdout)
+    return diff_file
+
+
+def state(diff_file: str) -> dict:
     result = inspect_stage_state.inspect(
         _stdout(["git", "status", "--porcelain", "-z"])
     )
-    result["staged_diff"] = _stdout(["git", "diff", "--cached"])
+    result["staged_diff_file"] = write_staged_diff(diff_file)
+    result["staged_diffstat"] = _stdout(["git", "diff", "--cached", "--stat"]).rstrip(
+        "\n"
+    )
     result.update(branch_info())
     return result
 
 
-def prepare(message_file: str) -> dict:
-    result = state()
+def prepare(message_file: str, diff_file: str) -> dict:
+    result = state(diff_file)
     Path(message_file).parent.mkdir(parents=True, exist_ok=True)
     result["message_file"] = message_file
     return result
 
 
-def stage(tracked: bool, paths: list[str]) -> dict:
+def stage(tracked: bool, paths: list[str], diff_file: str) -> dict:
     if not tracked and not paths:
         raise OpsError(
             "ステージする対象がありません（--tracked か --path を指定してください）"
@@ -115,7 +151,7 @@ def stage(tracked: bool, paths: list[str]) -> dict:
         _stdout(["git", "add", "-u"])
     if paths:
         _stdout(["git", "add", "--", *paths])
-    return state()
+    return state(diff_file)
 
 
 def new_branch(name: str) -> dict:
@@ -123,12 +159,13 @@ def new_branch(name: str) -> dict:
     return {"branch": name}
 
 
-def commit(message_file: str) -> dict:
+def commit(message_file: str, diff_file: str) -> dict:
     path = Path(message_file)
     if not path.is_file():
         raise OpsError(f"メッセージファイルがありません: {message_file}")
     _stdout(["git", "commit", "-F", str(path)])
     path.unlink()
+    Path(diff_file).unlink(missing_ok=True)
     return {
         "sha": _stdout(["git", "rev-parse", "HEAD"]).strip(),
         "summary": _stdout(["git", "log", "-1", "--format=%s"]).strip(),
@@ -150,11 +187,15 @@ def push(branch: str) -> dict:
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(description="/anvil:commit の git 操作")
     sub = parser.add_subparsers(dest="command", required=True)
+    diff_help = "ステージ済みの差分を書き出すファイルのパス"
     p = sub.add_parser(
-        "prepare", help="状態・差分・ブランチ判定を返し、メッセージの置き場を作る"
+        "prepare",
+        help="状態・ブランチ判定を返し、差分ファイルを書き、メッセージの置き場を作る",
     )
     p.add_argument("--message-file", required=True)
+    p.add_argument("--diff-file", required=True, help=diff_help)
     p = sub.add_parser("stage", help="git add -u / git add -- <path>")
+    p.add_argument("--diff-file", required=True, help=diff_help)
     p.add_argument(
         "--tracked",
         action="store_true",
@@ -170,6 +211,9 @@ def parse_args(argv=None):
     p.add_argument("--name", required=True)
     p = sub.add_parser("commit", help="git commit -F")
     p.add_argument("--message-file", required=True)
+    p.add_argument(
+        "--diff-file", required=True, help="commit 成功時に削除する差分ファイルのパス"
+    )
     p = sub.add_parser("push", help="git push")
     p.add_argument("--branch", required=True)
     return parser.parse_args(argv)
@@ -180,13 +224,13 @@ def main(argv=None) -> int:
     args = parse_args(argv)
     try:
         if args.command == "prepare":
-            result = prepare(args.message_file)
+            result = prepare(args.message_file, args.diff_file)
         elif args.command == "stage":
-            result = stage(args.tracked, args.path)
+            result = stage(args.tracked, args.path, args.diff_file)
         elif args.command == "new-branch":
             result = new_branch(args.name)
         elif args.command == "commit":
-            result = commit(args.message_file)
+            result = commit(args.message_file, args.diff_file)
         else:
             result = push(args.branch)
     except OpsError as e:

@@ -1,0 +1,20 @@
+{
+  "documents": [],
+  "reverse_references": [],
+  "target_spec": {
+    "dirs": [
+      "docs/specs/**/adr",
+      "docs/specs/**/design",
+      "docs/specs/**/plan",
+      "docs/specs/**/requirements"
+    ],
+    "exclude": [
+      "plan"
+    ],
+    "key": "specs",
+    "mode": "targets",
+    "paths": []
+  },
+  "toc_key": "specs",
+  "version": 1
+}

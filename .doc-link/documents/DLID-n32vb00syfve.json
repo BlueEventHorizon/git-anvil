@@ -1,0 +1,97 @@
+{
+  "applied_hash": "44790bab2fd9d8d494f50d875844e12ce728e244059bc0cefb9590ff1c93c155",
+  "content_hash": "44790bab2fd9d8d494f50d875844e12ce728e244059bc0cefb9590ff1c93c155",
+  "doc_link_id": "DLID-n32vb00syfve",
+  "keywords": [
+    "invocation route",
+    "context: fork",
+    "subagent_type",
+    "custom Agent",
+    "inherited SKILL",
+    "Bash subprocess",
+    "AskUserQuestion",
+    "background Agent",
+    "ScheduleWakeup",
+    "source citation"
+  ],
+  "last_check": {
+    "checked_at": "2026-11-25T03:02:56+00:00",
+    "result": "success"
+  },
+  "path": "docs/rules/plugin_claude_code_reference.md",
+  "purpose": "Reference of Claude Code facts and vocabulary relied on when building plugins from SKILLs and Agents: invocation routes, context: fork defects, subagent_type values and Agent launch observations.",
+  "references": [
+    {
+      "check": {
+        "checked_at": "2026-11-25T03:02:56+00:00",
+        "found_path": "docs/rules/plugin_claude_code_authoring_guide.md",
+        "result": "match",
+        "scope": "docs/rules"
+      },
+      "kind": "document",
+      "position": 0,
+      "recorded_content_hash": "73f3b09e6fbf",
+      "recorded_path": "plugin_claude_code_authoring_guide.md",
+      "source_section_id": null,
+      "target_doc_id": "DLID-r079k4d191ym",
+      "target_section_id": null
+    }
+  ],
+  "sections": [
+    {
+      "content_hash": "0d2ca4f3bf2bc8beb6a42a61aff6c50e908a90d6b01a30316b7657dde4df588f",
+      "heading": "Claude Code リファレンス（SKILL / プラグイン / Agent）",
+      "position": 0,
+      "section_id": "DLID-2a93hrp8cv46"
+    },
+    {
+      "content_hash": "16457dcc9235cad2e12fc8506e85942ae7c7e762c6fb4feda4e46e25320fc84b",
+      "heading": "`context: fork` の不具合",
+      "position": 3,
+      "section_id": "DLID-b0y85e04y1rw"
+    },
+    {
+      "content_hash": "3a94a53493942e132332c0463e5cc5cab808abe2bee4406b16e0445e231bfc47",
+      "heading": "2. `subagent_type` の値域",
+      "position": 4,
+      "section_id": "DLID-p0anbksg88q2"
+    },
+    {
+      "content_hash": "9cd969ec462507d95d6ae16a0d0d0a05dad45a2a846918c06af5357bfbdf15f1",
+      "heading": "出典の記し方",
+      "position": 1,
+      "section_id": "DLID-6ez7m48dcqbk"
+    },
+    {
+      "content_hash": "c28cfcbcac4c69c2b10ab835b414e9c4dd8c064d28e73acb82b85544c28af89a",
+      "heading": "1. 起動経路 5 種と短縮名称",
+      "position": 2,
+      "section_id": "DLID-r1ejx3b27739"
+    },
+    {
+      "content_hash": "dbf9e5b2f941193c23c585a1f7a6d0097edb8f56c66dd441ed9a36402cf5311a",
+      "heading": "3. Agent の起動に関する観測",
+      "position": 5,
+      "section_id": "DLID-bgqd34m0admq"
+    }
+  ],
+  "summary": [
+    "How to record sources for Claude Code behavior facts",
+    "Five invocation routes with short names and their properties table",
+    "Known context: fork issues with Anthropic responses",
+    "Valid values of subagent_type including built-in Agent names",
+    "Plugin Agents use the plugin:name namespace",
+    "Observation that Agent tool always runs in background in interactive sessions",
+    "Observation that AskUserQuestion is unavailable in background subagents",
+    "ScheduleWakeup is for /loop dynamic mode only"
+  ],
+  "tasks": [
+    "Choosing an invocation route for a SKILL or Agent",
+    "Deciding whether to use fork-type SKILL",
+    "Specifying subagent_type in an Agent call",
+    "Writing a Claude Code fact with a source line",
+    "Designing Agent flows that need user questions",
+    "Reviewing plugin authoring documents"
+  ],
+  "title": "Claude Code リファレンス（SKILL / プラグイン / Agent）"
+}

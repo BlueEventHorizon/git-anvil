@@ -1,0 +1,157 @@
+{
+  "applied_hash": "a7037b12722536682aa371798acb684c51c7f9a9a88c6cc165fbccd4c2f107e4",
+  "content_hash": "a7037b12722536682aa371798acb684c51c7f9a9a88c6cc165fbccd4c2f107e4",
+  "doc_link_id": "DLID-35fhyrzd02he",
+  "keywords": [
+    "plugin implementation",
+    "SKILL.md",
+    "inline script",
+    "temp files",
+    "fallback",
+    "version files",
+    "tests",
+    "standard library",
+    "CLAUDE_SKILL_DIR",
+    "distributed artifacts"
+  ],
+  "last_check": {
+    "checked_at": "2026-11-25T03:02:56+00:00",
+    "result": "success"
+  },
+  "path": "docs/rules/plugin_implementation_guidelines.md",
+  "purpose": "Plugin-independent rules for implementing plugin scripts (Python/Bash) and SKILL.md: language choice, tests, temp files, references, fallbacks, and version file handling.",
+  "references": [],
+  "sections": [
+    {
+      "content_hash": "02a1805ce865b07b41ddfa43c1468bca36b957a42350fed2a2e8989382124ce7",
+      "heading": "プラグイン実装ガイドライン",
+      "position": 0,
+      "section_id": "DLID-4px5jv1568w5"
+    },
+    {
+      "content_hash": "402559c2b716eadfc514d3b956afd71c79db63d42912468d409b6b4e7c7ab1bb",
+      "heading": "フォールバックを反射的に書かない [MANDATORY]",
+      "position": 10,
+      "section_id": "DLID-0em6bma15tg2"
+    },
+    {
+      "content_hash": "44a231efe251e8bd7e24ebe4c8fdc68af8620492f9de6b5950b0d4e57ee23ba5",
+      "heading": "スクリプトと文書の配置 [IMPORTANT]",
+      "position": 4,
+      "section_id": "DLID-jzpbdqs5tqrj"
+    },
+    {
+      "content_hash": "4509cc30d289ac71b6dc1402a522602d5f582ec7c2472c551f2e98e6b21f25cb",
+      "heading": "理由",
+      "position": 13,
+      "section_id": "DLID-mm983yy7b9wy"
+    },
+    {
+      "content_hash": "57cc4e45d61fb614376cb55e1ca59ac0c23a3fe29a678b362aee6b69df371e4d",
+      "heading": "編集しない対象",
+      "position": 15,
+      "section_id": "DLID-wwzecwvhss9v"
+    },
+    {
+      "content_hash": "5d98ac0ac8f1d80222e1104be5423abf1944099d7e096318299559d803df228e",
+      "heading": "配布物は開発用の文書を参照しない [MANDATORY]",
+      "position": 6,
+      "section_id": "DLID-mhrmweybjx9z"
+    },
+    {
+      "content_hash": "6d601b9157a2f7b9307765573c7876961db7f164ded4eb6f92b605d8a3595e7d",
+      "heading": "他のコンポーネントへの窓口は SKILL だけ [MANDATORY]",
+      "position": 7,
+      "section_id": "DLID-z6bcgfwrztj4"
+    },
+    {
+      "content_hash": "8100bdb88783cd1e8360e38da6be9bcff465c52f0531de912145fc35991e795d",
+      "heading": "判断の手順",
+      "position": 12,
+      "section_id": "DLID-hx3xzsgqyyjh"
+    },
+    {
+      "content_hash": "8241d2fdb9c047b88793d0619c77d4d026324e4ba6d0ec81d86ce5ba54852e11",
+      "heading": "一時ファイルは `.temp/<plugin>/<skill>/` に `Write` ツールで書く [CRITICAL]",
+      "position": 5,
+      "section_id": "DLID-jej8f9m3vz0h"
+    },
+    {
+      "content_hash": "9072420d2ac1b6709e7d6c52bbe0d766f4a49595c0180775634b535e971e6347",
+      "heading": "理由",
+      "position": 17,
+      "section_id": "DLID-fmzrshbaygz4"
+    },
+    {
+      "content_hash": "9075d900f9362fd71cf8f587aeeea379951cc18120cd5c1c1a29715becaf2d31",
+      "heading": "AI が解釈する入力にスクリプトのパーサーを使わない [CRITICAL]",
+      "position": 9,
+      "section_id": "DLID-erqgzx68j9y4"
+    },
+    {
+      "content_hash": "ab98f57245c92ad11987c7b8c9a4aec084814721ffea3858709327f288e60d17",
+      "heading": "例外",
+      "position": 16,
+      "section_id": "DLID-n63xrv3gbzwp"
+    },
+    {
+      "content_hash": "acf58de6a39f7af0fb76080b0258e1b9126c328923495ca71ce8decaf98cea20",
+      "heading": "テスト [CRITICAL]",
+      "position": 2,
+      "section_id": "DLID-a1dqx3s6k9ba"
+    },
+    {
+      "content_hash": "b4a784fcb013453c59e30df59a9c1332ae6749677983429d889bfc6ab09a3c2a",
+      "heading": "使わないコードは削除する [IMPORTANT]",
+      "position": 8,
+      "section_id": "DLID-f93xz9akmt8b"
+    },
+    {
+      "content_hash": "b9c0836e770412d214493d57a04e5deefa089cf3ca5da5aa56a04740adc2949a",
+      "heading": "SKILL.md にインラインスクリプトを書かない [CRITICAL]",
+      "position": 3,
+      "section_id": "DLID-rty2ap6xgkfj"
+    },
+    {
+      "content_hash": "caf3645a23b8646663b71e1d79eb9d1a9d2272046fe8af39b88e0a2755326f3e",
+      "heading": "スクリプト言語と依存 [IMPORTANT]",
+      "position": 1,
+      "section_id": "DLID-c5bk0wjjp0bm"
+    },
+    {
+      "content_hash": "dded6bf9dac3a83cb331611688f3dd20f0e87e8e8416d5d86aadb60bf28715bd",
+      "heading": "禁止するパターン",
+      "position": 11,
+      "section_id": "DLID-aj96vtgb3wg7"
+    },
+    {
+      "content_hash": "f502c1f17d535083c3f164fb4722e19322c41218a23b90dbd3ecd0d314ba0b96",
+      "heading": "バージョン関連ファイルは通常の作業で編集しない [CRITICAL]",
+      "position": 14,
+      "section_id": "DLID-cas54zcbq420"
+    }
+  ],
+  "summary": [
+    "Script language choice and standard-library-only dependency policy",
+    "Mandatory tests for distributed Python scripts and naming of test directories",
+    "No inline scripts in SKILL.md; call external scripts",
+    "Placement of scripts and docs per skill or plugin, no cross-skill references",
+    "Temp files written with the Write tool under .temp/plugin/skill with session ID",
+    "Distributed artifacts must not reference development-only documents",
+    "Only SKILLs are the interface to other components",
+    "Delete unused code; no AI-interpreted input in script parsers",
+    "Avoid reflexive fallbacks; report errors explicitly",
+    "Do not edit version files in ordinary work"
+  ],
+  "tasks": [
+    "Implementing plugin Python or Bash scripts",
+    "Writing or editing SKILL.md",
+    "Adding tests for distributed scripts",
+    "Creating temp files in a skill workflow",
+    "Deciding where to place scripts and docs",
+    "Writing references in distributed files",
+    "Adding fallback or error handling",
+    "Handling version bumps and changelogs"
+  ],
+  "title": "プラグイン実装ガイドライン"
+}

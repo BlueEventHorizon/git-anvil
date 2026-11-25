@@ -1,0 +1,117 @@
+{
+  "applied_hash": "73f3b09e6fbfdf1df290df2b886d2a1b1aa568bed4e92473e820053ac002b050",
+  "content_hash": "73f3b09e6fbfdf1df290df2b886d2a1b1aa568bed4e92473e820053ac002b050",
+  "doc_link_id": "DLID-r079k4d191ym",
+  "keywords": [
+    "custom Agent",
+    "SKILL",
+    "invocation route",
+    "subagent_type",
+    "fork SKILL",
+    "defense in depth",
+    "allowlist",
+    "ScheduleWakeup",
+    "self-invocation",
+    "plugin authoring"
+  ],
+  "last_check": {
+    "checked_at": "2026-11-25T03:02:56+00:00",
+    "result": "success"
+  },
+  "path": "docs/rules/plugin_claude_code_authoring_guide.md",
+  "purpose": "Project-independent conventions for building plugins from SKILLs and custom Agents: naming, invocation route selection, defense layers, skill invocation and waiting for Agent completion.",
+  "references": [
+    {
+      "check": {
+        "checked_at": "2026-11-25T03:02:56+00:00",
+        "found_path": "docs/rules/plugin_claude_code_reference.md",
+        "result": "match",
+        "scope": "docs/rules"
+      },
+      "kind": "document",
+      "position": 0,
+      "recorded_content_hash": "44790bab2fd9",
+      "recorded_path": "plugin_claude_code_reference.md",
+      "source_section_id": null,
+      "target_doc_id": "DLID-n32vb00syfve",
+      "target_section_id": null
+    }
+  ],
+  "sections": [
+    {
+      "content_hash": "1bfeddc47245e28acfc189cc2a2b4bbede6a20438e8a355c8bf1272da37e8884",
+      "heading": "起動経路の選び方",
+      "position": 3,
+      "section_id": "DLID-emht0nf25nd5"
+    },
+    {
+      "content_hash": "292a680ce87d0c0c87207bb1eb626804706fc52cb7029c42cc5e3d8c244f752c",
+      "heading": "カスタム Agent",
+      "position": 5,
+      "section_id": "DLID-kxhmhn6h4r3p"
+    },
+    {
+      "content_hash": "2c80616e84c2f824f2b0b5a64624ddbb9a7b3bd69eead05ee2d798faf516eef7",
+      "heading": "多重防御",
+      "position": 6,
+      "section_id": "DLID-tj5cht2bh9z5"
+    },
+    {
+      "content_hash": "2d6d96929419c464397e82357bdcaf8dc364be3613038cda6f47d2ca72b18382",
+      "heading": "名称",
+      "position": 1,
+      "section_id": "DLID-n2ev98sq8arw"
+    },
+    {
+      "content_hash": "872e35b0c4bf7b64cbf3f1a1847421120913ce0fe84ac522a0048a720b9b174e",
+      "heading": "別スキルの呼び出し [MANDATORY]",
+      "position": 7,
+      "section_id": "DLID-yfysfspxt2zf"
+    },
+    {
+      "content_hash": "92c223d5a92d35c51cca44365a461ddaa176ec12d199c4ed76e91aca1892879e",
+      "heading": "Claude Code 作成ガイド（SKILL / カスタム Agent）",
+      "position": 0,
+      "section_id": "DLID-p3ppj6znsh69"
+    },
+    {
+      "content_hash": "ab7484ff8b77095a3567b627c3124ffeae8db4da5412b44d09a69e46805a0494",
+      "heading": "起動経路",
+      "position": 2,
+      "section_id": "DLID-bdq9ta2dd6kf"
+    },
+    {
+      "content_hash": "d1f2349573397b8a98905a917f61c14fcae12cbef9a7e2161be10de1946ac8d6",
+      "heading": "Agent の完了の待ち方 [MANDATORY]",
+      "position": 8,
+      "section_id": "DLID-jtpfexg1pajr"
+    },
+    {
+      "content_hash": "db72439f4c50a11e1e1ec6fb1f6b1c20c9f47e20d8b1d03a68582a3a2bfaa011",
+      "heading": "継承型 SKILL",
+      "position": 4,
+      "section_id": "DLID-dmy5gkkra1qh"
+    }
+  ],
+  "summary": [
+    "Naming rules for invocation routes and avoiding bare subagent",
+    "subagent_type must be a built-in or defined custom Agent name",
+    "Preference for custom Agents over fork-type SKILLs",
+    "Decision order for choosing an invocation route",
+    "Rules for passing minimal arguments to inherited SKILLs and Agents",
+    "Custom Agent frontmatter, prohibitions and write constraints",
+    "Multi-layer defense table: Agent boundary, role constraints, allowlist, deny",
+    "Invoking other skills via the Skill tool without self-invocation",
+    "Do not wait for Agent completion with ScheduleWakeup"
+  ],
+  "tasks": [
+    "Designing a plugin combining SKILLs and custom Agents",
+    "Writing or reviewing a custom Agent definition",
+    "Choosing an invocation route for a task",
+    "Writing SKILL.md that launches an Agent",
+    "Writing SKILL.md that calls another skill",
+    "Waiting for background Agent completion",
+    "Reviewing plugin authoring conventions"
+  ],
+  "title": "Claude Code 作成ガイド（SKILL / カスタム Agent）"
+}

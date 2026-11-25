@@ -1,0 +1,40 @@
+{
+  "documents": [
+    "DLID-35fhyrzd02he",
+    "DLID-55jqxg7r9qr1",
+    "DLID-59vzewmxghxc",
+    "DLID-n32vb00syfve",
+    "DLID-r079k4d191ym"
+  ],
+  "reverse_references": [
+    {
+      "source_doc_id": "DLID-55jqxg7r9qr1",
+      "source_section_id": null,
+      "target_doc_id": "DLID-35fhyrzd02he",
+      "target_section_id": null
+    },
+    {
+      "source_doc_id": "DLID-n32vb00syfve",
+      "source_section_id": null,
+      "target_doc_id": "DLID-r079k4d191ym",
+      "target_section_id": null
+    },
+    {
+      "source_doc_id": "DLID-r079k4d191ym",
+      "source_section_id": null,
+      "target_doc_id": "DLID-n32vb00syfve",
+      "target_section_id": null
+    }
+  ],
+  "target_spec": {
+    "dirs": [
+      "docs/rules"
+    ],
+    "exclude": [],
+    "key": "rules",
+    "mode": "targets",
+    "paths": []
+  },
+  "toc_key": "rules",
+  "version": 1
+}

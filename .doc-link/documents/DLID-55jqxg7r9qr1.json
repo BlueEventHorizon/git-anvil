@@ -1,0 +1,117 @@
+{
+  "applied_hash": "38e543a39b0000dd605e56ece4afbf3f1098bbdd47ad6a1f464916b7a90d5c45",
+  "content_hash": "38e543a39b0000dd605e56ece4afbf3f1098bbdd47ad6a1f464916b7a90d5c45",
+  "doc_link_id": "DLID-55jqxg7r9qr1",
+  "keywords": [
+    "uv",
+    "PEP 723",
+    "pyproject.toml",
+    "uv run --locked",
+    "uv lock",
+    "exclude-newer",
+    "dependencies",
+    "requires-python",
+    "supply chain",
+    "lock file"
+  ],
+  "last_check": {
+    "checked_at": "2026-11-25T03:02:56+00:00",
+    "result": "success"
+  },
+  "path": "docs/rules/plugin_uv_usage_rules.md",
+  "purpose": "Rules for running Python scripts and managing dependencies with uv, letting uv choose and record version numbers so humans and AI never hand-write them.",
+  "references": [
+    {
+      "check": {
+        "checked_at": "2026-11-25T03:02:56+00:00",
+        "found_path": "docs/rules/plugin_implementation_guidelines.md",
+        "result": "match",
+        "scope": "docs/rules"
+      },
+      "kind": "document",
+      "position": 0,
+      "recorded_content_hash": "a7037b127225",
+      "recorded_path": "plugin_implementation_guidelines.md",
+      "source_section_id": null,
+      "target_doc_id": "DLID-35fhyrzd02he",
+      "target_section_id": null
+    }
+  ],
+  "sections": [
+    {
+      "content_hash": "63593940471b2b79fcdc2977d8c6c80025e281d159695d043723cd3f77d5b682",
+      "heading": "依存の追加と削除 [MANDATORY]",
+      "position": 4,
+      "section_id": "DLID-rz9q08ayff14"
+    },
+    {
+      "content_hash": "91e5cc8948f8222c80970593783dbfce8277ad6a743c568842c5a2df582785da",
+      "heading": "適用範囲",
+      "position": 1,
+      "section_id": "DLID-dfvccr5n7rv9"
+    },
+    {
+      "content_hash": "9cfc15996a14c03527134b102073c8cedfc5cabb9cc2bbcd396404e15aea7e2d",
+      "heading": "ロック",
+      "position": 5,
+      "section_id": "DLID-nz0m4aryvsg8"
+    },
+    {
+      "content_hash": "9cff1c2c0cadefccd751c4cfcbbac21da6b1b90e05a63c4c144cdb1a7f4fbafd",
+      "heading": "Python の版",
+      "position": 8,
+      "section_id": "DLID-y00mrvk1fnqr"
+    },
+    {
+      "content_hash": "b6b665165920c92e20811236c4b80bddb0d17f166ef2608a496d77ec407eddff",
+      "heading": "公開直後の版を取り込まない",
+      "position": 7,
+      "section_id": "DLID-rht6admcdb3g"
+    },
+    {
+      "content_hash": "bfa4cfa8a63bb7d765e680be1ff6d8e2db26184fc21941ced78fac22571a5da1",
+      "heading": "依存の宣言の置き場",
+      "position": 2,
+      "section_id": "DLID-w2t19v8jbhh3"
+    },
+    {
+      "content_hash": "dd4f650d4aca3696b0e72db9e696b8e33d7d4a86f348fe2611520b9c7b9a51e5",
+      "heading": "実行 [MANDATORY]",
+      "position": 3,
+      "section_id": "DLID-vgtdhmzf59zb"
+    },
+    {
+      "content_hash": "f74839b7d1f9932e8babd4839c1dcc603a0c98a43536bf76541af330008d9d0f",
+      "heading": "更新",
+      "position": 6,
+      "section_id": "DLID-fdverfrzfema"
+    },
+    {
+      "content_hash": "fac92cdbef097cca5ebcbde249b4a7ecec6a15eed191fb799b0730be0a0185a7",
+      "heading": "uv 利用ルール",
+      "position": 0,
+      "section_id": "DLID-6a28har6hrt1"
+    }
+  ],
+  "summary": [
+    "Applies only when project instructions mandate uv; distributed scripts require judging the user environment burden",
+    "Dependency declaration location: PEP 723 inline metadata or root pyproject.toml",
+    "Run Python scripts with uv run, not system python3",
+    "Add dependencies with uv add --script --bounds lower, remove with uv remove; never hand-write versions",
+    "Lock with uv lock --script, commit lock file, run with uv run --locked",
+    "Update with uv lock --upgrade and review the lock diff before commit",
+    "Set exclude-newer = \"3 days\" in tool.uv to avoid freshly published versions",
+    "Urgent security fixes use exclude-newer-package exceptions, removed afterwards",
+    "requires-python lower bound follows the latest stable Python"
+  ],
+  "tasks": [
+    "Running a Python script in a plugin",
+    "Adding or removing a script dependency",
+    "Writing PEP 723 inline metadata",
+    "Locking and updating dependencies",
+    "Setting up pyproject.toml for tests",
+    "Choosing requires-python version",
+    "Deciding whether to apply uv to distributed scripts"
+  ],
+  "title": "uv 利用ルール"
+}
